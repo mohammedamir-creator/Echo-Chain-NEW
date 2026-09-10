@@ -278,11 +278,7 @@
   let buying = false;
   let purchaseJustCompleted = false;
 
-  function priceLabel(){
-    const amount = (paymentsCfg.priceCents/100).toFixed(2);
-    const cur = (paymentsCfg.currency||'usd').toUpperCase();
-    return cur==='USD' ? `$${amount}` : `${amount} ${cur}`;
-  }
+  const CURRENCY_SYMBOLS = { USD:'$', GBP:'£', EUR:'€', CAD:'CA$', AUD:'A$', JPY:'¥' }; function priceLabel(){ const amount = (paymentsCfg.priceCents/100).toFixed(2); const cur = (paymentsCfg.currency||'usd').toUpperCase(); const symbol = CURRENCY_SYMBOLS[cur]; return symbol ? `${symbol}${amount}` : `${amount} ${cur}`; }
 
   async function initPayments(){
     try{
