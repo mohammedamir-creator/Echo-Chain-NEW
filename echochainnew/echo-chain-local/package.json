@@ -1,0 +1,16 @@
+{
+  "name": "echo-chain",
+  "version": "1.0.0",
+  "description": "Echo Chain — a lobby-code party game with a drawing chain round and a sound-mimic voting round.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "stripe": "^17.0.0"
+  },
+  "license": "UNLICENSED"
+}
