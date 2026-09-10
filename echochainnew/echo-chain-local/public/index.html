@@ -182,13 +182,99 @@
     background:#fff;
     display:block;
   }
-  .toolbar{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap;}
+  .toolbar{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap;align-items:center;}
   .swatch{
     width:26px;height:26px;border-radius:50%;
     border:2px solid var(--ink-soft);
     cursor:pointer;
   }
   .swatch.active{outline:2px solid var(--yellow);outline-offset:2px;}
+
+  /* ---- drawing tool panel ---- */
+  .tool-panel{
+    background:#241a44;
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    margin:10px 0 4px;
+  }
+  .tool-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+  .tool-row:last-child{margin-bottom:0;}
+  .wheel-block{display:flex;gap:12px;align-items:center;}
+  .color-wheel{
+    position:relative;
+    width:96px;height:96px;
+    border-radius:50%;
+    border:3px solid var(--ink);
+    cursor:crosshair;
+    background:
+      radial-gradient(circle at center, #fff 0%, rgba(255,255,255,0) 62%),
+      conic-gradient(from 90deg, red, yellow, lime, cyan, blue, magenta, red);
+    touch-action:none;
+    flex:0 0 auto;
+  }
+  .wheel-puck{
+    position:absolute;
+    width:14px;height:14px;
+    border-radius:50%;
+    border:2px solid #fff;
+    box-shadow:0 0 0 1.5px rgba(0,0,0,0.6);
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+  .wheel-side{display:flex;flex-direction:column;gap:8px;flex:1;min-width:110px;}
+  .current-color-swatch{
+    width:100%;
+    height:22px;
+    border-radius:7px;
+    border:2px solid var(--ink);
+  }
+  input[type=range].lightness-slider{
+    -webkit-appearance:none;
+    width:100%;
+    height:14px;
+    border-radius:7px;
+    background:linear-gradient(to right, #000, #fff);
+    border:2px solid var(--ink);
+  }
+  input[type=range].lightness-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--yellow);
+    border:2px solid var(--ink);
+    cursor:pointer;
+  }
+  input[type=range].lightness-slider::-moz-range-thumb{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--yellow);
+    border:2px solid var(--ink);
+    cursor:pointer;
+  }
+  .pen-size-btn{
+    width:32px;height:32px;
+    border-radius:8px;
+    border:2px solid var(--line);
+    background:#1B1230;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .pen-size-btn .dot{border-radius:50%;background:var(--paper);}
+  .pen-size-btn.active{border-color:var(--yellow);background:#33245c;}
+  .tool-btn{
+    width:38px;height:32px;
+    border-radius:8px;
+    border:2px solid var(--line);
+    background:#1B1230;
+    color:var(--paper);
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .tool-btn.active{border-color:var(--yellow);background:#33245c;}
+  .tool-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .tool-label{font-size:11px;color:#B9AEDD;font-weight:600;margin-right:2px;}
   .slide-card{
     background:var(--paper);
     color:var(--ink);
@@ -278,7 +364,13 @@
   let buying = false;
   let purchaseJustCompleted = false;
 
-  const CURRENCY_SYMBOLS = { USD:'$', GBP:'£', EUR:'€', CAD:'CA$', AUD:'A$', JPY:'¥' }; function priceLabel(){ const amount = (paymentsCfg.priceCents/100).toFixed(2); const cur = (paymentsCfg.currency||'usd').toUpperCase(); const symbol = CURRENCY_SYMBOLS[cur]; return symbol ? `${symbol}${amount}` : `${amount} ${cur}`; }
+  const CURRENCY_SYMBOLS = { USD:'$', GBP:'£', EUR:'€', CAD:'CA$', AUD:'A$', JPY:'¥' };
+  function priceLabel(){
+    const amount = (paymentsCfg.priceCents/100).toFixed(2);
+    const cur = (paymentsCfg.currency||'usd').toUpperCase();
+    const symbol = CURRENCY_SYMBOLS[cur];
+    return symbol ? `${symbol}${amount}` : `${amount} ${cur}`;
+  }
 
   async function initPayments(){
     try{
@@ -363,6 +455,11 @@
 
   let mediaRecorder=null, mediaChunks=[], mediaStream=null;
   let canvasCtx=null, drawing=false, currentColor='#1B1230';
+  let currentHue=252, currentSat=45, currentLight=22; // matches the ink color above (HSL)
+  let currentSize=8;
+  let isEraser=false;
+  let undoStack=[], redoStack=[];
+  const PEN_SIZES = [4, 8, 14, 22];
 
   // ---------- storage helpers ----------
   // These talk to the tiny local server (server.js) instead of Claude's
@@ -642,9 +739,27 @@
           <h2 class="display" style="font-size:19px;">Draw this</h2>
           <div class="slide-card" style="margin-bottom:14px;"><div class="phrase">${escapeHtml(prevText)}</div></div>
           <canvas class="draw-board" id="drawBoard"></canvas>
-          <div class="toolbar">
-            ${['#1B1230','#FF5E5B','#3FD9A6','#8C7BFF','#FFD23F'].map(c=>`<div class="swatch ${c===currentColor?'active':''}" data-color="${c}" style="background:${c}"></div>`).join('')}
-            <button class="btn small ghost" id="clearBoardBtn" style="margin-left:auto;">Clear</button>
+          <div class="tool-panel">
+            <div class="tool-row wheel-block">
+              <div class="color-wheel" id="colorWheel"><div class="wheel-puck" id="wheelPuck"></div></div>
+              <div class="wheel-side">
+                <div class="current-color-swatch" id="currentColorSwatch" style="background:${currentColor};"></div>
+                <input type="range" class="lightness-slider" id="lightnessSlider" min="5" max="90" value="${currentLight}">
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-label">Pen</span>
+              ${PEN_SIZES.map(sz=>`
+                <div class="pen-size-btn ${(!isEraser && sz===currentSize)?'active':''}" data-size="${sz}" title="${sz}px">
+                  <div class="dot" style="width:${Math.max(4,sz*0.8)}px;height:${Math.max(4,sz*0.8)}px;"></div>
+                </div>
+              `).join('')}
+              <span class="tool-label" style="margin-left:6px;">Tools</span>
+              <div class="tool-btn ${isEraser?'active':''}" id="eraserBtn" title="Eraser">🧹</div>
+              <div class="tool-btn" id="undoBtn" title="Undo">↶</div>
+              <div class="tool-btn" id="redoBtn" title="Redo">↷</div>
+              <button class="btn small ghost" id="clearBoardBtn" style="margin-left:auto;">Clear</button>
+            </div>
           </div>
           <button class="btn mint" id="submitDrawingBtn">Submit drawing</button>
         </div>
@@ -665,16 +780,95 @@
     `;
   }
 
+  function hslToHex(h,s,l){
+    s/=100; l/=100;
+    const k = n => (n + h/30) % 12;
+    const a = s * Math.min(l, 1-l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
+    const toHex = x => Math.round(255*x).toString(16).padStart(2,'0');
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+  }
+
+  function updateCurrentColor(){
+    currentColor = hslToHex(currentHue, currentSat, currentLight);
+    const sw = document.getElementById('currentColorSwatch');
+    if(sw) sw.style.background = currentColor;
+  }
+
+  function positionWheelPuck(){
+    const wheel = document.getElementById('colorWheel');
+    const puck = document.getElementById('wheelPuck');
+    if(!wheel || !puck) return;
+    const r = wheel.clientWidth/2;
+    const dist = (currentSat/100) * r;
+    const rad = (currentHue - 90) * Math.PI/180;
+    puck.style.left = (r + dist*Math.cos(rad)) + 'px';
+    puck.style.top = (r + dist*Math.sin(rad)) + 'px';
+    puck.style.background = currentColor;
+  }
+
+  function pushUndoSnapshot(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !canvasCtx) return;
+    try{
+      undoStack.push(canvasCtx.getImageData(0,0,canvas.width,canvas.height));
+      if(undoStack.length > 25) undoStack.shift();
+      redoStack = [];
+      updateUndoRedoButtons();
+    }catch(e){}
+  }
+  function updateUndoRedoButtons(){
+    const u = document.getElementById('undoBtn');
+    const r = document.getElementById('redoBtn');
+    if(u) u.style.opacity = undoStack.length>1 ? '1' : '0.3';
+    if(r) r.style.opacity = redoStack.length>0 ? '1' : '0.3';
+  }
+  function doUndo(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !canvasCtx || undoStack.length<=1) return;
+    const current = undoStack.pop();
+    redoStack.push(current);
+    canvasCtx.putImageData(undoStack[undoStack.length-1], 0, 0);
+    updateUndoRedoButtons();
+  }
+  function doRedo(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !canvasCtx || !redoStack.length) return;
+    const next = redoStack.pop();
+    undoStack.push(next);
+    canvasCtx.putImageData(next, 0, 0);
+    updateUndoRedoButtons();
+  }
+
   function setupCanvasIfNeeded(){
     const canvas = document.getElementById('drawBoard');
     if(!canvas) return;
+    if(canvasCtx && canvas.dataset.wired==='1') return; // already set up for this task — don't reset the drawing
     canvas.width = canvas.clientWidth * 2;
     canvas.height = canvas.clientHeight * 2;
     const ctx2d = canvas.getContext('2d');
     ctx2d.fillStyle = '#fff';
     ctx2d.fillRect(0,0,canvas.width,canvas.height);
-    ctx2d.lineJoin='round'; ctx2d.lineCap='round'; ctx2d.lineWidth=7;
+    ctx2d.lineJoin='round'; ctx2d.lineCap='round';
     canvasCtx = ctx2d;
+    canvas.dataset.wired = '1';
+
+    // fresh tool state for each new drawing task
+    currentHue=252; currentSat=45; currentLight=22; currentSize=8; isEraser=false;
+    updateCurrentColor();
+    positionWheelPuck();
+    // the HTML for the pen/eraser buttons was built with the *previous* task's
+    // settings, so sync their active classes to the freshly-reset state
+    document.querySelectorAll('.pen-size-btn').forEach(b=>{
+      b.classList.toggle('active', parseInt(b.getAttribute('data-size'),10)===currentSize);
+    });
+    const eraserBtnEl = document.getElementById('eraserBtn');
+    if(eraserBtnEl) eraserBtnEl.classList.remove('active');
+    const lightSlider = document.getElementById('lightnessSlider');
+    if(lightSlider) lightSlider.value = currentLight;
+    undoStack=[]; redoStack=[];
+    pushUndoSnapshot(); // blank canvas as the first undo state
+
     let last=null;
     function posFromEvent(e){
       const rect = canvas.getBoundingClientRect();
@@ -686,13 +880,41 @@
     function move(e){
       if(!drawing) return;
       const p = posFromEvent(e);
-      ctx2d.strokeStyle = currentColor;
+      ctx2d.strokeStyle = isEraser ? '#ffffff' : currentColor;
+      ctx2d.lineWidth = (isEraser ? currentSize*2.2 : currentSize) * 2; // *2 to match the 2x canvas backing resolution
       ctx2d.beginPath(); ctx2d.moveTo(last.x,last.y); ctx2d.lineTo(p.x,p.y); ctx2d.stroke();
       last = p; e.preventDefault();
     }
-    function end(){ drawing=false; }
+    function end(){
+      if(drawing) pushUndoSnapshot();
+      drawing=false;
+    }
     canvas.addEventListener('mousedown',start); canvas.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
     canvas.addEventListener('touchstart',start,{passive:false}); canvas.addEventListener('touchmove',move,{passive:false}); canvas.addEventListener('touchend',end);
+
+    // ---- color wheel ----
+    const wheel = document.getElementById('colorWheel');
+    if(wheel){
+      let picking=false;
+      function pickFromEvent(e){
+        const rect = wheel.getBoundingClientRect();
+        const cx = (e.touches? e.touches[0].clientX : e.clientX) - rect.left - rect.width/2;
+        const cy = (e.touches? e.touches[0].clientY : e.clientY) - rect.top - rect.height/2;
+        let dist = Math.sqrt(cx*cx + cy*cy) / (rect.width/2);
+        dist = Math.min(1, dist);
+        let angle = Math.atan2(cy, cx) * 180/Math.PI + 90;
+        if(angle < 0) angle += 360;
+        currentHue = angle;
+        currentSat = Math.round(dist*100);
+        updateCurrentColor();
+        positionWheelPuck();
+      }
+      function wheelStart(e){ picking=true; pickFromEvent(e); e.preventDefault(); }
+      function wheelMove(e){ if(!picking) return; pickFromEvent(e); e.preventDefault(); }
+      function wheelEnd(){ picking=false; }
+      wheel.addEventListener('mousedown',wheelStart); wheel.addEventListener('mousemove',wheelMove); window.addEventListener('mouseup',wheelEnd);
+      wheel.addEventListener('touchstart',wheelStart,{passive:false}); wheel.addEventListener('touchmove',wheelMove,{passive:false}); wheel.addEventListener('touchend',wheelEnd);
+    }
   }
 
   // ---- Chain reveal ----
@@ -870,18 +1092,39 @@
         if(!ui.chainSubmitted){
           setupCanvasIfNeeded();
           const task = myChainTask();
-          document.querySelectorAll('.swatch').forEach(sw=>{
-            sw.addEventListener('click', ()=>{
-              currentColor=sw.getAttribute('data-color');
-              // Update the active outline directly instead of calling render(),
-              // which would rebuild the canvas and erase the drawing so far.
-              document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-              sw.classList.add('active');
+
+          on('lightnessSlider','input', (e)=>{
+            currentLight = parseInt(e.target.value, 10);
+            updateCurrentColor();
+            positionWheelPuck();
+          });
+
+          document.querySelectorAll('.pen-size-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+              currentSize = parseInt(btn.getAttribute('data-size'), 10);
+              isEraser = false;
+              document.querySelectorAll('.pen-size-btn').forEach(b=>b.classList.remove('active'));
+              btn.classList.add('active');
+              const eb = document.getElementById('eraserBtn'); if(eb) eb.classList.remove('active');
             });
           });
+
+          on('eraserBtn','click', ()=>{
+            isEraser = !isEraser;
+            const eb = document.getElementById('eraserBtn'); if(eb) eb.classList.toggle('active', isEraser);
+            if(isEraser) document.querySelectorAll('.pen-size-btn').forEach(b=>b.classList.remove('active'));
+          });
+
+          on('undoBtn','click', doUndo);
+          on('redoBtn','click', doRedo);
+          updateUndoRedoButtons();
+
           on('clearBoardBtn','click', ()=>{
             const c=document.getElementById('drawBoard');
-            if(canvasCtx && c){ canvasCtx.fillStyle='#fff'; canvasCtx.fillRect(0,0,c.width,c.height); }
+            if(canvasCtx && c){
+              canvasCtx.fillStyle='#fff'; canvasCtx.fillRect(0,0,c.width,c.height);
+              pushUndoSnapshot();
+            }
           });
           on('submitChainTextBtn','click', ()=>submitChainText(task));
           on('submitDrawingBtn','click', ()=>submitChainDrawing(task));
