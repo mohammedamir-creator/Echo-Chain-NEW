@@ -1,0 +1,3147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Echo Chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B1230;
+    --paper:#FFF8EC;
+    --red:#FF5E5B;
+    --mint:#3FD9A6;
+    --yellow:#FFD23F;
+    --purple:#8C7BFF;
+    --blue:#3EC6F0;
+    --orange:#FF9E3D;
+    --pink:#FF6FB5;
+    --green:#5FD35C;
+    --ink-soft:#2E2150;
+    --line:#4A3A72;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(140,123,255,0.20), transparent 40%),
+      radial-gradient(circle at 88% 82%, rgba(63,217,166,0.16), transparent 42%),
+      radial-gradient(circle at 90% 10%, rgba(62,198,240,0.14), transparent 38%),
+      radial-gradient(circle at 8% 90%, rgba(255,111,181,0.14), transparent 38%),
+      radial-gradient(circle at 50% 50%, rgba(255,158,61,0.06), transparent 60%);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.display{
+    font-family:'Baloo 2',cursive;
+    margin:0;
+  }
+  #app{
+    max-width:640px;
+    margin:0 auto;
+    padding:14px 14px 24px;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  @media (min-width:900px){
+    #app{ max-width:820px; }
+    canvas.draw-board{ aspect-ratio:16/10; }
+  }
+  @media (min-width:1300px){
+    #app{ max-width:1000px; }
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .brand .dot{color:var(--yellow);}
+  .brand h1{font-size:22px;font-weight:800;letter-spacing:0.3px;}
+  .brand-logo{
+    height:46px;
+    width:auto;
+    display:block;
+  }
+  .brand span.tag{
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    color:var(--ink);
+    background:var(--mint);
+    padding:3px 8px;
+    border-radius:20px;
+    font-weight:600;
+  }
+  .panel{
+    background:var(--ink-soft);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+    box-shadow:5px 5px 0 rgba(0,0,0,0.35);
+  }
+  .panel.tight{padding:14px 16px;}
+  .lede{
+    font-size:15px;
+    line-height:1.55;
+    color:#D9D2F0;
+    margin:6px 0 18px;
+  }
+  .btn{
+    font-family:'Baloo 2',cursive;
+    font-size:16px;
+    font-weight:700;
+    color:var(--ink);
+    background:var(--yellow);
+    border:none;
+    border-radius:11px;
+    padding:11px 20px;
+    cursor:pointer;
+    box-shadow:4px 4px 0 rgba(0,0,0,0.4);
+    transition:transform 0.06s ease, box-shadow 0.06s ease;
+    width:100%;
+    margin-bottom:8px;
+  }
+  .btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 rgba(0,0,0,0.4);}
+  .btn.red{background:var(--red);color:var(--paper);}
+  .btn.mint{background:var(--mint);color:var(--ink);}
+  .btn.purple{background:var(--purple);color:var(--paper);}
+  .btn.blue{background:var(--blue);color:var(--ink);}
+  .btn.orange{background:var(--orange);color:var(--ink);}
+  .btn.pink{background:var(--pink);color:var(--ink);}
+  .btn.green{background:var(--green);color:var(--ink);}
+  .btn.ghost{
+    background:transparent;
+    border:2px solid var(--line);
+    color:var(--paper);
+    box-shadow:none;
+  }
+  .btn.ghost:active{transform:none;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn.small{width:auto;padding:9px 14px;font-size:14px;}
+  input[type=text], textarea{
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    width:100%;
+    padding:12px 14px;
+    border-radius:10px;
+    border:2px solid var(--line);
+    background:#241a44;
+    color:var(--paper);
+    margin-bottom:12px;
+  }
+  input[type=text]:focus, textarea:focus{outline:2px solid var(--mint);}
+  label.field-label{
+    display:block;
+    font-size:13px;
+    color:#B9AEDD;
+    margin-bottom:6px;
+    font-weight:600;
+  }
+  .code-card{
+    background:var(--paper);
+    color:var(--ink);
+    text-align:center;
+    padding:26px 18px 22px;
+    border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+    border:3px solid var(--ink);
+    margin-bottom:16px;
+  }
+  .code-card .label{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:1px;
+    color:#6b5f8f;
+  }
+  .code-card .code{
+    font-family:'Baloo 2',cursive;
+    font-size:46px;
+    font-weight:800;
+    letter-spacing:8px;
+    margin:6px 0 12px;
+    color:var(--red);
+  }
+  .player-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}
+  .player-tag{
+    background:#241a44;
+    border:2px solid var(--line);
+    border-radius:9px;
+    padding:7px 12px;
+    font-size:14px;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .player-tag .pin{width:7px;height:7px;border-radius:50%;background:var(--mint);}
+  .player-tag.host .pin{background:var(--yellow);}
+  .progress-track{
+    height:10px;
+    border-radius:6px;
+    background:#241a44;
+    border:2px solid var(--line);
+    overflow:hidden;
+    margin:10px 0 6px;
+  }
+  .progress-fill{height:100%;background:var(--mint);transition:width 0.3s ease;}
+  .muted{color:#B9AEDD;font-size:13px;}
+  .center{text-align:center;}
+  canvas.draw-board{
+    width:100%;
+    aspect-ratio:4/2.6;
+    max-height:52vh;
+    max-height:52dvh;
+    background:#fff;
+    border-radius:10px;
+    border:3px solid var(--ink);
+    touch-action:none;
+    display:block;
+  }
+  .drawing-img{
+    width:100%;
+    border-radius:10px;
+    border:3px solid var(--ink);
+    background:#fff;
+    display:block;
+  }
+  .toolbar{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap;align-items:center;}
+  .swatch{
+    width:26px;height:26px;border-radius:50%;
+    border:2px solid var(--ink-soft);
+    cursor:pointer;
+  }
+  .swatch.active{outline:2px solid var(--yellow);outline-offset:2px;}
+
+  /* ---- drawing tool panel ---- */
+  .tool-panel{
+    background:#241a44;
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    margin:8px 0 4px;
+  }
+  .tool-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
+  .tool-row:last-child{margin-bottom:0;}
+  .wheel-block{display:flex;gap:10px;align-items:center;}
+  .color-wheel{
+    position:relative;
+    width:72px;height:72px;
+    border-radius:50%;
+    border:3px solid var(--ink);
+    cursor:crosshair;
+    background:
+      radial-gradient(circle at center, #fff 0%, rgba(255,255,255,0) 62%),
+      conic-gradient(from 90deg, red, yellow, lime, cyan, blue, magenta, red);
+    touch-action:none;
+    flex:0 0 auto;
+  }
+  .wheel-puck{
+    position:absolute;
+    width:14px;height:14px;
+    border-radius:50%;
+    border:2px solid #fff;
+    box-shadow:0 0 0 1.5px rgba(0,0,0,0.6);
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+  .wheel-side{display:flex;flex-direction:column;gap:8px;flex:1;min-width:110px;}
+  .current-color-swatch{
+    width:100%;
+    height:22px;
+    border-radius:7px;
+    border:2px solid var(--ink);
+  }
+  input[type=range].lightness-slider{
+    -webkit-appearance:none;
+    width:100%;
+    height:14px;
+    border-radius:7px;
+    background:linear-gradient(to right, #000, #fff);
+    border:2px solid var(--ink);
+  }
+  input[type=range].lightness-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--yellow);
+    border:2px solid var(--ink);
+    cursor:pointer;
+  }
+  input[type=range].lightness-slider::-moz-range-thumb{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--yellow);
+    border:2px solid var(--ink);
+    cursor:pointer;
+  }
+  .pen-size-btn{
+    width:32px;height:32px;
+    border-radius:8px;
+    border:2px solid var(--line);
+    background:#1B1230;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .pen-size-btn .dot{border-radius:50%;background:var(--paper);}
+  .pen-size-btn.active{border-color:var(--yellow);background:#33245c;}
+  .tool-btn{
+    width:38px;height:32px;
+    border-radius:8px;
+    border:2px solid var(--line);
+    background:#1B1230;
+    color:var(--paper);
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .tool-btn.active{border-color:var(--yellow);background:#33245c;}
+  .tool-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .tool-label{font-size:11px;color:#B9AEDD;font-weight:600;margin-right:2px;}
+  .roster-row{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;}
+  .roster-chip{
+    flex:0 0 auto;
+    width:34px;height:34px;
+    border-radius:50%;
+    background:#DCCFA8;
+    border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;
+    color:var(--ink);
+    overflow:hidden;
+    padding:3px;
+  }
+  .roster-chip img{width:100%;height:100%;object-fit:contain;animation:charBob 2.6s ease-in-out infinite;}
+  .submit-row{display:flex;justify-content:center;margin-top:4px;}
+  .btn.compact{width:auto;padding:9px 26px;margin-bottom:0;}
+  .char-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:8px;
+    margin:8px 0 16px;
+  }
+  .char-badge{
+    aspect-ratio:1;
+    border-radius:14px;
+    background:#DCCFA8;
+    border:3px solid var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    padding:8px;
+    box-shadow:3px 3px 0 rgba(0,0,0,0.3);
+  }
+  .char-badge img{width:100%;height:100%;object-fit:contain;animation:charBob 2.6s ease-in-out infinite;}
+  @keyframes charBob{
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4%) rotate(-2deg); }
+  }
+  .char-grid .char-badge:nth-child(2n) img{ animation-delay:0.4s; }
+  .char-grid .char-badge:nth-child(3n) img{ animation-delay:0.8s; }
+  .char-grid .char-badge:nth-child(5n) img{ animation-delay:1.3s; }
+  .roster-row .roster-chip:nth-child(2n) img{ animation-delay:0.4s; }
+  .roster-row .roster-chip:nth-child(3n) img{ animation-delay:0.8s; }
+  /* a little colour rotation through the badges so the grids feel as
+     rainbow as the logo, without needing per-character theming */
+  .char-grid .char-badge:nth-child(5n+1){ border-color:var(--pink); }
+  .char-grid .char-badge:nth-child(5n+2){ border-color:var(--blue); }
+  .char-grid .char-badge:nth-child(5n+3){ border-color:var(--green); }
+  .char-grid .char-badge:nth-child(5n+4){ border-color:var(--orange); }
+  .char-grid .char-badge:nth-child(5n+5){ border-color:var(--purple); }
+  .roster-row .roster-chip:nth-child(5n+1){ border-color:var(--pink); }
+  .roster-row .roster-chip:nth-child(5n+2){ border-color:var(--blue); }
+  .roster-row .roster-chip:nth-child(5n+3){ border-color:var(--green); }
+  .roster-row .roster-chip:nth-child(5n+4){ border-color:var(--orange); }
+  .roster-row .roster-chip:nth-child(5n+5){ border-color:var(--purple); }
+  /* the selected/active state must always win over the rainbow rotation
+     above, so this needs matching specificity and to come after it */
+  .char-grid .char-badge.active{ border-color:var(--yellow); }
+
+  /* ---- Impression Stage ---- */
+  .impr-prompt-card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:14px;
+    border:3px solid var(--ink);
+    padding:18px;
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .impr-prompt-card .label{font-size:12px;font-weight:700;letter-spacing:1px;color:#6b5f8f;}
+  .impr-prompt-card .prompt{font-family:'Baloo 2',cursive;font-size:21px;font-weight:800;margin-top:6px;}
+  .impr-stage-row{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:16px 0;}
+  .impr-stage-badge{
+    width:74px;height:74px;
+    border-radius:16px;
+    background:var(--paper);
+    border:3px solid var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;
+    padding:8px;
+  }
+  .impr-stage-badge img{width:100%;height:100%;object-fit:contain;}
+  .impr-stage-name{text-align:center;font-size:12px;font-weight:700;color:#B9AEDD;margin-top:4px;}
+  .impr-stage-col{display:flex;flex-direction:column;align-items:center;}
+  .impr-stage-badge.speaking{
+    border-color:var(--yellow);
+    box-shadow:0 0 0 4px rgba(255,210,63,0.35);
+  }
+  .impr-stage-badge.speaking img{ animation:charSpeak 0.5s ease-in-out infinite; }
+  @keyframes charSpeak{
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    50% { transform: translateY(-10%) rotate(-6deg) scale(1.08); }
+  }
+  .impr-vote-grid{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:16px 0;}
+  .impr-vote-badge{
+    width:84px;height:84px;
+    border-radius:16px;
+    background:var(--paper);
+    border:3px solid var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;
+    padding:10px;
+    cursor:pointer;
+  }
+  .impr-vote-badge img{width:100%;height:100%;object-fit:contain;}
+  .impr-vote-badge.selected{border-color:var(--mint);box-shadow:0 0 0 4px rgba(63,217,166,0.35);}
+  .impr-vote-badge.disabled{opacity:0.4;cursor:not-allowed;}
+  .char-badge.active{
+    border-color:var(--yellow);
+    box-shadow:3px 3px 0 rgba(0,0,0,0.3), 0 0 0 3px rgba(255,210,63,0.4);
+  }
+  .slide-card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:14px;
+    border:3px solid var(--ink);
+    padding:18px;
+    text-align:center;
+  }
+  .slide-card .phrase{font-family:'Baloo 2',cursive;font-size:22px;font-weight:700;}
+  .slide-card .by{font-size:12px;color:#6b5f8f;margin-top:10px;font-weight:600;}
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;}
+  .chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
+  .chip{
+    flex:0 0 auto;
+    padding:7px 13px;
+    border-radius:20px;
+    border:2px solid var(--line);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    background:transparent;
+    color:var(--paper);
+  }
+  .chip.active{background:var(--purple);border-color:var(--purple);}
+  .mic-circle{
+    width:120px;height:120px;
+    border-radius:50%;
+    border:4px solid var(--red);
+    display:flex;align-items:center;justify-content:center;
+    margin:16px auto;
+    font-size:44px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .mic-circle.recording{background:rgba(255,94,91,0.25);animation:pulse 1s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,94,91,0.5);}70%{box-shadow:0 0 0 18px rgba(255,94,91,0);}100%{box-shadow:0 0 0 0 rgba(255,94,91,0);}}
+  .wave-canvas{
+    width:100%;
+    height:90px;
+    background:#120c26;
+    border:2px solid var(--line);
+    border-radius:10px;
+    margin:10px 0 6px;
+    display:block;
+  }
+  audio{width:100%;margin:8px 0;}
+  .vote-option{
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+    cursor:pointer;
+  }
+  .vote-option.selected{border-color:var(--mint);background:rgba(63,217,166,0.1);}
+  .vote-option .name{font-weight:700;font-family:'Baloo 2',cursive;margin-bottom:6px;}
+  .phase-timer{
+    text-align:center;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:16px;
+    color:var(--yellow);
+    margin-bottom:10px;
+  }
+  .phase-timer.urgent{ color:var(--red); }
+  .masked-word{
+    text-align:center;
+    font-family:'Baloo 2',cursive;
+    font-weight:800;
+    font-size:26px;
+    letter-spacing:3px;
+    color:var(--paper);
+    background:#241a44;
+    border:2px solid var(--line);
+    border-radius:10px;
+    padding:14px 10px;
+    margin-bottom:12px;
+    word-break:break-all;
+  }
+  .stage-whiteboard{
+    width:100%;
+    aspect-ratio:4/2.6;
+    background:#fff;
+    border-radius:10px;
+    border:3px solid var(--ink);
+    display:block;
+    object-fit:contain;
+    margin-bottom:10px;
+  }
+  .pict-feed{
+    max-height:150px;
+    overflow-y:auto;
+    background:#1B1230;
+    border:2px solid var(--line);
+    border-radius:10px;
+    padding:8px 10px;
+    margin-bottom:10px;
+  }
+  .pict-feed-row{font-size:14px;color:#D9D2F0;padding:3px 0;}
+  .pict-feed-row.correct{color:var(--mint);font-weight:700;}
+  .word-choice-btn{
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:10px;
+    cursor:pointer;
+    text-align:center;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:18px;
+  }
+  .word-choice-btn:active{border-color:var(--yellow);}
+  .duration-picker{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px;}
+  .duration-btn{
+    flex:1 1 auto;
+    min-width:60px;
+    padding:9px 6px;
+    text-align:center;
+    border-radius:9px;
+    border:2px solid var(--line);
+    background:#241a44;
+    color:var(--paper);
+    font-weight:700;
+    cursor:pointer;
+  }
+  .duration-btn.active{border-color:var(--yellow);background:#33245c;}
+  .leader-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 4px;border-bottom:1px solid var(--line);
+  }
+  .leader-row:last-child{border-bottom:none;}
+  .rank{font-family:'Baloo 2',cursive;font-weight:800;font-size:18px;width:28px;}
+  .bar-track{flex:1;height:16px;background:#241a44;border-radius:8px;margin:0 10px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--yellow);}
+  .error-box{
+    border:2px dashed var(--red);
+    border-radius:10px;
+    padding:12px 14px;
+    color:#FFC7C6;
+    font-size:14px;
+    margin-bottom:12px;
+  }
+  .footer-note{text-align:center;font-size:12px;color:#8477AB;margin-top:24px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- identity / session state ----------
+  const BUILD_VERSION = 'v20-logo-and-colour-refresh';
+  const myId = 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+  let myName = '';
+  let lobbyCode = '';
+  let isHost = false;
+  let view = 'home'; // home | join | lobby | game
+  let errorMsg = '';
+  let meta = null;
+
+  // ---------- paid-access state ----------
+  let paymentsCfg = { paymentsEnabled:false, priceCents:500, currency:'usd', productName:'Echo Chain — Host Access' };
+  let hasAccess = false;      // can this browser host a lobby?
+  let accessToken = '';       // the saved proof-of-purchase code
+  let payError = '';
+  let buying = false;
+  let purchaseJustCompleted = false;
+
+  // ---------- characters ----------
+  // Add more later by dropping an image into public/characters/ and adding
+  // a line here — the same low-effort pattern as the custom sound presets.
+  const CHARACTERS = [
+    { id:'speaker', name:'Speaker', file:'speaker.png' },
+    { id:'bottle',  name:'Bottle',  file:'bottle.png' },
+    { id:'crown',   name:'Crown',   file:'crown.png' },
+    { id:'broom',   name:'Broom',   file:'broom.png' },
+    { id:'cone',    name:'Cone',    file:'cone.png' },
+    { id:'soap',    name:'Soap',    file:'soap.png' },
+    { id:'pickle',  name:'Pickle',  file:'pickle.png' },
+    { id:'fish',    name:'Fish',    file:'fish.png' },
+    { id:'purse',   name:'Purse',   file:'purse.png' },
+    { id:'cactus',  name:'Cactus',  file:'cactus.png' }
+  ];
+  function charById(id){ return CHARACTERS.find(c=>c.id===id) || CHARACTERS[0]; }
+  function playerChar(pid){ const p=(ui.players||[]).find(pl=>pl.id===pid); return p ? p.character : null; }
+  function charIconImg(id, sizePx){
+    const c = charById(id);
+    const s = sizePx || 40;
+    return `<img src="${c.file}" alt="${escapeHtml(c.name)}" style="width:${s}px;height:${s}px;object-fit:contain;" />`;
+  }
+  let selectedCharacter = CHARACTERS[Math.floor(Math.random()*CHARACTERS.length)].id;
+
+  // ---------- game modes ----------
+  // Add more later by adding a line here and, if it needs new screens,
+  // wiring a status for it — same pattern as sounds/characters.
+  const MODES = [
+    { id:'chain', name:'Chain Doodle', desc:'A drawing-and-guessing telephone chain.' },
+    { id:'sound', name:'Sound Mimic', desc:'Copy a goofy sound with your voice, then vote on the best impression.' },
+    { id:'pictionary', name:'Stage Draw', desc:'One player draws a mystery word live while everyone else races to guess it in chat.' },
+    { id:'impression', name:'Impression Stage', desc:'Everyone privately records an impression of the same wild prompt, the stage plays them back one by one, then the group votes. 5 prompts per round.' }
+  ];
+  const DURATION_OPTIONS = [30, 60, 90, 120];
+  const AUTO_SKIP_GRACE_SEC = 45; // how long to wait for stragglers after a timer hits zero
+
+  // ---------- Impression Stage prompt bank ----------
+  // Add more later by just adding a line — no other code changes needed.
+  const IMPRESSION_PROMPTS = [
+    'A horse falling down the stairs','A zombie waking up','A skeleton trying to sneeze',
+    'A demon answering the phone','An alien discovering Earth','A ghost being jumpscared',
+    'A shark choking on water','A gorilla using a tiny keyboard','A medieval knight seeing a car for the first time',
+    'A vampire drinking a Capri-Sun','A dinosaur getting angry at Alexa','A possessed toaster',
+    'A printer having a mental breakdown','A microwave exploding','A fat pigeon trying to fly',
+    'A car that desperately needs an MOT','Someone stepping on LEGO','A dinosaur ordering McDonald\u2019s',
+    'A burglar trying to be silent','A baby discovering their voice','A Wi-Fi router dying',
+    'A washing machine escaping its house','A seagull stealing someone\u2019s chips','A computer overheating',
+    'A vacuum cleaner fighting for its life','Someone trying to open a ridiculously tight jar',
+    'A shopping trolley with one broken wheel','Someone sneezing','A phone ringing','A toilet flushing',
+    'A balloon popping','A chicken','A cat coughing','A fire crackling'
+  ];
+
+  // ---------- Stage Draw word bank ----------
+  // Add more later by just adding a word to this list — no other code
+  // changes needed. Keep them short and drawable.
+  const PICTIONARY_WORDS = [
+    'penguin','volcano','sandwich','robot','umbrella','dragon','bicycle','ghost',
+    'lighthouse','octopus','pirate','snowman','castle','rocket','dinosaur','cactus',
+    'mermaid','wizard','pancake','skateboard','jellyfish','campfire','tornado','igloo',
+    'unicorn','pretzel','submarine','scarecrow','volleyball','waterfall','beehive','anchor',
+    'kangaroo','telescope','pyramid','tractor','flamingo','avocado','windmill','spaceship',
+    'butterfly','trampoline','koala','lantern','cupcake','helicopter','peacock','snail',
+    'accordion','hammock'
+  ];
+
+  function charGridHtml(){
+    return `<div class="char-grid">${CHARACTERS.map(c=>`
+      <div class="char-badge ${c.id===selectedCharacter?'active':''}" data-char="${c.id}" title="${escapeHtml(c.name)}">
+        <img src="${c.file}" alt="${escapeHtml(c.name)}" />
+      </div>
+    `).join('')}</div>`;
+  }
+
+  const CURRENCY_SYMBOLS = { USD:'$', GBP:'£', EUR:'€', CAD:'CA$', AUD:'A$', JPY:'¥' };
+  function priceLabel(){
+    const amount = (paymentsCfg.priceCents/100).toFixed(2);
+    const cur = (paymentsCfg.currency||'usd').toUpperCase();
+    const symbol = CURRENCY_SYMBOLS[cur];
+    return symbol ? `${symbol}${amount}` : `${amount} ${cur}`;
+  }
+
+  async function initPayments(){
+    try{
+      const res = await fetch('/api/config');
+      if(res.ok) paymentsCfg = await res.json();
+    }catch(e){ /* server may be starting up; defaults keep the game usable */ }
+
+    if(!paymentsCfg.paymentsEnabled){ hasAccess = true; return; }
+
+    const params = new URLSearchParams(window.location.search);
+    const paidSession = params.get('paid_session');
+    if(paidSession){
+      try{
+        const res = await fetch('/api/verify-purchase?session_id=' + encodeURIComponent(paidSession));
+        const data = await res.json().catch(()=>({}));
+        if(res.ok && data.token){
+          accessToken = data.token;
+          try{ localStorage.setItem('echoChainAccessToken', accessToken); }catch(e){}
+          hasAccess = true;
+          purchaseJustCompleted = true;
+        } else {
+          payError = data.error || 'Could not verify your payment.';
+        }
+      }catch(e){ payError = 'Could not verify your payment.'; }
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    let saved = '';
+    try{ saved = localStorage.getItem('echoChainAccessToken') || ''; }catch(e){}
+    if(saved){
+      try{
+        const res = await fetch('/api/check-token', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: saved }) });
+        const data = await res.json().catch(()=>({}));
+        if(data && data.valid){ accessToken = saved; hasAccess = true; }
+        else { try{ localStorage.removeItem('echoChainAccessToken'); }catch(e){} }
+      }catch(e){ /* network hiccup — leave hasAccess false, they can retry */ }
+    }
+  }
+
+  async function buyAccess(){
+    payError=''; buying=true; render();
+    try{
+      const res = await fetch('/api/checkout', { method:'POST' });
+      const data = await res.json().catch(()=>({}));
+      if(res.ok && data.url){ window.location.href = data.url; return; }
+      payError = data.error || 'Could not start checkout.';
+    }catch(e){ payError = 'Could not start checkout.'; }
+    buying=false; render();
+  }
+
+  async function redeemCode(){
+    const el = document.getElementById('redeemInput');
+    const code = el ? el.value.trim() : '';
+    if(!code) return;
+    payError='';
+    try{
+      const res = await fetch('/api/check-token', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: code }) });
+      const data = await res.json().catch(()=>({}));
+      if(data && data.valid){
+        accessToken = code;
+        try{ localStorage.setItem('echoChainAccessToken', code); }catch(e){}
+        hasAccess = true;
+      } else {
+        payError = "That code doesn't look right.";
+      }
+    }catch(e){ payError = 'Could not check that code.'; }
+    render();
+  }
+
+  // per-screen ephemeral UI state
+  let ui = {
+    joinCodeInput:'', joinNameInput:'', hostNameInput:'',
+    players:[],
+    modeVoteSelected:null, modeVoteSubmitted:false, modeVoteProgress:{count:0,total:0},
+    chainVoteSelected:null, chainVoteSubmitted:false, chainVoteProgress:{count:0,total:0}, chainVoteTally:[],
+    pictGuessInput:'', pictGuessedCorrectly:false, pictFeed:[], pictResults:null, pictStageImg:'',
+    imprSubmitted:false, imprProgress:{count:0,total:0}, imprRecordedBlob:null, imprRecordedUrl:null,
+    imprVoteSelected:null, imprVoteSubmitted:false, imprVoteProgress:{count:0,total:0}, imprRoundTally:[], imprMicDenied:false,
+    chainSubmitted:false, chainProgress:{count:0,total:0}, chainTaskCache:null,
+    revealChains:[], revealOwnerIdx:0, revealStepIdx:0,
+    soundSubmitted:false, soundProgress:{count:0,total:0},
+    recording:false, recordedBlob:null, recordedUrl:null, micDenied:false,
+    voteEntries:[], voteSelected:null, voteSubmitted:false, voteProgress:{count:0,total:0},
+    roundTally:[], finalTally:[]
+  };
+
+  let mediaRecorder=null, mediaChunks=[], mediaStream=null;
+  let canvasCtx=null, drawing=false, currentColor='#1B1230';
+  let currentHue=252, currentSat=45, currentLight=22; // matches the ink color above (HSL)
+  let currentSize=8;
+  let isEraser=false;
+  let undoStack=[], redoStack=[];
+  const PEN_SIZES = [4, 8, 14, 22];
+
+  // ---------- storage helpers ----------
+  // These talk to the tiny local server (server.js) instead of Claude's
+  // artifact storage — the server keeps everything in memory on the host's
+  // own machine, so the game works with no internet and no Claude involved
+  // once it's running.
+  async function sGet(key){
+    try{
+      const res = await fetch('/api/get?key=' + encodeURIComponent(key));
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data.value ? JSON.parse(data.value) : null;
+    }catch(e){ return null; }
+  }
+  async function sSet(key,val){
+    try{
+      const res = await fetch('/api/set', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key, value: JSON.stringify(val) })
+      });
+      if(!res.ok) console.error('storage set failed', await res.text());
+      return res.ok;
+    }catch(e){ console.error('storage set failed', e); return false; }
+  }
+  async function sListKeys(prefix){
+    try{
+      const res = await fetch('/api/list?prefix=' + encodeURIComponent(prefix));
+      if(!res.ok) return [];
+      const data = await res.json();
+      return data.keys || [];
+    }catch(e){ return []; }
+  }
+
+  function metaKey(){ return `lobby:${lobbyCode}:meta`; }
+  function playerKey(id){ return `lobby:${lobbyCode}:players:${id}`; }
+  function chainKey(phase, ownerId){ return `lobby:${lobbyCode}:chain:${phase}:${ownerId}`; }
+  function soundKey(roundId, pid){ return `lobby:${lobbyCode}:sound:${roundId}:${pid}`; }
+  function voteKey(roundId, pid){ return `lobby:${lobbyCode}:vote:${roundId}:${pid}`; }
+
+  function genCode(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/I/1
+    let c='';
+    for(let i=0;i<5;i++) c += chars[Math.floor(Math.random()*chars.length)];
+    return c;
+  }
+
+  // ---------- sound presets (procedural, no external audio needed) ----------
+  let audioCtx=null;
+  function ctx(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+
+  // Every preset's audio routes through this single analyser on its way to the
+  // speakers, so we can read the live waveform of whatever sound is playing —
+  // procedural or file-based — without wiring up analysis per-preset.
+  let _targetAnalyser=null;
+  function targetAnalyser(){
+    if(!_targetAnalyser){
+      _targetAnalyser = ctx().createAnalyser();
+      _targetAnalyser.fftSize = 512;
+      _targetAnalyser.connect(ctx().destination);
+    }
+    return _targetAnalyser;
+  }
+
+  // ---------- your own custom sounds ----------
+  // To add a sound you found or recorded yourself: put an audio file (mp3 or
+  // wav works well) in the public/sounds/ folder, then add a line here, e.g.:
+  //   { id:'airhorn', name:'Air Horn', desc:'A blaring air horn blast.', file:'sounds/airhorn.mp3' }
+  // The id must be unique. That's it — it'll start showing up in the rotation
+  // alongside the built-in sounds automatically, no other code changes needed.
+  const FILE_PRESETS = [
+    // { id:'my-sound', name:'My Sound', desc:'A short description shown to players.', file:'sounds/my-sound.mp3' },
+  ];
+
+  const _audioBufferCache = {};
+  async function loadAudioBuffer(url){
+    if(_audioBufferCache[url]) return _audioBufferCache[url];
+    const res = await fetch(url);
+    const arrBuf = await res.arrayBuffer();
+    const audioBuf = await ctx().decodeAudioData(arrBuf);
+    _audioBufferCache[url] = audioBuf;
+    return audioBuf;
+  }
+
+  const PRESETS = {
+    trombone: { name:'Sad Trombone', desc:'Womp womp womp — a slow, defeated descending honk.', play(){
+      const c=ctx(); const notes=[220,196,174,146]; let t=c.currentTime;
+      notes.forEach((f,i)=>{
+        const o=c.createOscillator(), g=c.createGain();
+        o.type='sawtooth'; o.frequency.setValueAtTime(f,t);
+        g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.25,t+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
+        o.connect(g); g.connect(targetAnalyser());
+        o.start(t); o.stop(t+0.34);
+        t += i===notes.length-2 ? 0.34 : 0.3;
+      });
+    }},
+    boing: { name:'Cartoon Boing', desc:'A springy sine sweep that bounces up then settles.', play(){
+      const c=ctx(); const t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sine';
+      o.frequency.setValueAtTime(90,t);
+      o.frequency.exponentialRampToValueAtTime(700,t+0.18);
+      o.frequency.exponentialRampToValueAtTime(260,t+0.4);
+      o.frequency.exponentialRampToValueAtTime(400,t+0.55);
+      g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.7);
+      o.connect(g); g.connect(targetAnalyser()); o.start(t); o.stop(t+0.72);
+    }},
+    ghost: { name:'Wandering Ghost', desc:'A wobbly "oooOOOooo" that fades into the dark.', play(){
+      const c=ctx(); const t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain(), lfo=c.createOscillator(), lfoGain=c.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(300,t); o.frequency.linearRampToValueAtTime(340,t+1.4);
+      lfo.type='sine'; lfo.frequency.setValueAtTime(5,t);
+      lfoGain.gain.setValueAtTime(25,t);
+      lfo.connect(lfoGain); lfoGain.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.25);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+1.5);
+      o.connect(g); g.connect(targetAnalyser());
+      o.start(t); lfo.start(t); o.stop(t+1.5); lfo.stop(t+1.5);
+    }},
+    robot: { name:'Robot Beep-Boop', desc:'Four sharp square-wave beeps, like a droid saying hello.', play(){
+      const c=ctx(); const notes=[520,390,520,700]; let t=c.currentTime;
+      notes.forEach(f=>{
+        const o=c.createOscillator(), g=c.createGain();
+        o.type='square'; o.frequency.setValueAtTime(f,t);
+        g.gain.setValueAtTime(0.15,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
+        o.connect(g); g.connect(targetAnalyser()); o.start(t); o.stop(t+0.12);
+        t += 0.15;
+      });
+    }},
+    stinger: { name:'Dramatic Stinger', desc:'Dun. Dun. DUNNNN. A courtroom-reveal sting.', play(){
+      const c=ctx(); const t=c.currentTime;
+      [[130,0.18],[130,0.18],[98,0.9]].forEach(([f,dur],i)=>{
+        const start = t + i*0.32;
+        const o=c.createOscillator(), g=c.createGain();
+        o.type='sawtooth'; o.frequency.setValueAtTime(f,start);
+        g.gain.setValueAtTime(0.001,start); g.gain.exponentialRampToValueAtTime(0.28,start+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,start+dur);
+        o.connect(g); g.connect(targetAnalyser()); o.start(start); o.stop(start+dur+0.02);
+      });
+    }},
+    whistle: { name:'Slide Whistle', desc:'A bright sine that slides all the way up in under a second.', play(){
+      const c=ctx(); const t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(1500,t+0.55);
+      g.gain.setValueAtTime(0.001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.06);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.6);
+      o.connect(g); g.connect(targetAnalyser()); o.start(t); o.stop(t+0.62);
+    }}
+  };
+  const PRESET_IDS = Object.keys(PRESETS);
+
+  function getSoundDef(id){
+    if(PRESETS[id]) return PRESETS[id];
+    const f = FILE_PRESETS.find(f=>f.id===id);
+    if(!f) return null;
+    return {
+      name: f.name, desc: f.desc,
+      async play(){
+        const buf = await loadAudioBuffer(f.file);
+        const src = ctx().createBufferSource();
+        const g = ctx().createGain();
+        g.gain.value = 0.85;
+        src.buffer = buf;
+        src.connect(g); g.connect(targetAnalyser());
+        src.start();
+        _nextSoundDurationMs = Math.min(6000, buf.duration*1000 + 150);
+      }
+    };
+  }
+  function allSoundIds(){ return PRESET_IDS.concat(FILE_PRESETS.map(f=>f.id)); }
+
+  // ---------- Stage Draw helpers ----------
+  function pickPictionaryWords(n, used){
+    const avail = PICTIONARY_WORDS.filter(w=>!(used||[]).includes(w));
+    const pool = avail.length>=n ? avail : PICTIONARY_WORDS;
+    return pool.slice().sort(()=>Math.random()-0.5).slice(0,n);
+  }
+  // A tiny seeded shuffle so every client reveals hint letters in the SAME
+  // order without needing to store that order anywhere — the round id is
+  // the seed, so it's identical and reproducible on every device.
+  function seededShuffleIndices(count, seedStr){
+    let seed = 0;
+    for(let i=0;i<seedStr.length;i++) seed = (seed*31 + seedStr.charCodeAt(i)) >>> 0;
+    function rand(){ seed = (seed*1103515245 + 12345) >>> 0; return seed / 4294967296; }
+    const idx = Array.from({length:count}, (_,i)=>i);
+    for(let i=idx.length-1;i>0;i--){
+      const j = Math.floor(rand()*(i+1));
+      [idx[i],idx[j]] = [idx[j],idx[i]];
+    }
+    return idx;
+  }
+  function maskedWordDisplay(word, elapsedFraction, roundId){
+    const letterPositions = [];
+    for(let i=0;i<word.length;i++) if(word[i]!==' ') letterPositions.push(i);
+    const order = seededShuffleIndices(letterPositions.length, roundId);
+    // never reveal every letter via hints alone — always leave at least one
+    const maxReveal = Math.max(0, letterPositions.length - 1);
+    const revealCount = Math.min(maxReveal, Math.floor(elapsedFraction * letterPositions.length));
+    const revealedPositions = new Set(order.slice(0, revealCount).map(oi=>letterPositions[oi]));
+    let out = '';
+    for(let i=0;i<word.length;i++){
+      if(word[i]===' ') out += '  ';
+      else out += (revealedPositions.has(i) ? word[i].toUpperCase() : '_') + ' ';
+    }
+    return out.trim();
+  }
+
+  // ---------- render root ----------
+  function render(){
+    const app = document.getElementById('app');
+    app.innerHTML = brandHtml() + (errorMsg ? `<div class="error-box">${escapeHtml(errorMsg)}</div>` : '') + bodyHtml();
+    wireEvents();
+  }
+  function brandHtml(){
+    return `<div class="brand"><img src="logo.png" class="brand-logo" alt="Echo Chain" />${lobbyCode?`<span class="tag">${lobbyCode}</span>`:''}</div>`;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function bodyHtml(){
+    if(view==='home') return homeHtml();
+    if(view==='join') return joinHtml();
+    if(view==='lobby') return lobbyHtml();
+    if(view==='game') return gameHtml();
+    return '';
+  }
+
+  // ---------- HOME ----------
+  function homeHtml(){
+    const needsPaywall = paymentsCfg.paymentsEnabled && !hasAccess;
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:20px;">A party game with two moods</h2>
+        <p class="lede">Round one: a drawing-and-guessing chain, like a game of telephone with a pencil. Round two: the game plays a goofy sound, everyone records themselves imitating it, and the group votes on the best impression.</p>
+        ${purchaseJustCompleted ? `<div class="panel tight" style="border-color:var(--mint);margin-bottom:14px;"><strong>Purchase confirmed!</strong> You can host lobbies on this browser now.</div>` : ''}
+        ${payError ? `<div class="error-box">${escapeHtml(payError)}</div>` : ''}
+        ${needsPaywall ? `
+          <div class="panel tight" style="border-color:var(--yellow);margin-bottom:14px;">
+            <h3 class="display" style="font-size:16px;margin-bottom:6px;">Hosting costs ${priceLabel()}, one time</h3>
+            <p class="muted" style="margin-bottom:10px;">Anyone can join a lobby for free with a code. Only hosting a new lobby needs this.</p>
+            <button class="btn yellow" id="buyAccessBtn" ${buying?'disabled':''} style="background:var(--yellow);color:var(--ink);">${buying?'Opening checkout…':'Buy access — ' + priceLabel()}</button>
+            <label class="field-label" style="margin-top:12px;">Already bought it? Enter your access code</label>
+            <input type="text" id="redeemInput" placeholder="Paste your access code">
+            <button class="btn ghost" id="redeemBtn">Unlock hosting</button>
+          </div>
+        ` : ''}
+        <label class="field-label">Your name</label>
+        <input type="text" id="hostNameInput" placeholder="What should people call you?" value="${escapeHtml(ui.hostNameInput)}" maxlength="18">
+        <label class="field-label">Pick a character</label>
+        ${charGridHtml()}
+        <button class="btn mint" id="createBtn" ${needsPaywall?'disabled':''}>Host a new lobby</button>
+        <button class="btn ghost" id="goJoinBtn">I have an invite code</button>
+        ${(paymentsCfg.paymentsEnabled && hasAccess && accessToken) ? `
+          <p class="muted" style="margin-top:14px;">Hosting unlocked ✓ — <a href="#" id="showCodeLink" style="color:#B9AEDD;">show my access code</a> to use on another device.</p>
+          <div id="codeReveal" style="display:none;">
+            <input type="text" readonly value="${escapeHtml(accessToken)}" onclick="this.select()">
+          </div>
+        ` : ''}
+      </div>
+      <p class="footer-note">Works with up to about 10 players on their own phones or laptops, all connected to the same WiFi as whoever is hosting.</p>
+      <p class="footer-note">build ${BUILD_VERSION}</p>
+    `;
+  }
+
+  // ---------- JOIN ----------
+  function joinHtml(){
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:20px;">Join a lobby</h2>
+        <label class="field-label">Invite code</label>
+        <input type="text" id="joinCodeInput" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:3px;" value="${escapeHtml(ui.joinCodeInput)}" maxlength="5">
+        <label class="field-label">Your name</label>
+        <input type="text" id="joinNameInput" placeholder="What should people call you?" value="${escapeHtml(ui.joinNameInput)}" maxlength="18">
+        <label class="field-label">Pick a character</label>
+        ${charGridHtml()}
+        <button class="btn mint" id="joinBtn">Join lobby</button>
+        <button class="btn ghost" id="backHomeBtn">Back</button>
+      </div>
+    `;
+  }
+
+  // ---------- LOBBY (waiting room) ----------
+  function lobbyHtml(){
+    const players = ui.players;
+    const n = players.length;
+    return `
+      <div class="code-card">
+        <div class="label">INVITE CODE</div>
+        <div class="code">${lobbyCode}</div>
+        <button class="btn small ghost" id="copyCodeBtn" style="width:auto;color:var(--ink);border-color:var(--ink);">Copy code</button>
+      </div>
+      <div class="panel">
+        <h3 class="display" style="font-size:17px;">Who's here (${n})</h3>
+        <div class="player-row">
+          ${players.map(p=>`<span class="player-tag ${p.id===meta.hostId?'host':''}">${p.character?`<img src="${charById(p.character).file}" alt="" style="width:16px;height:16px;object-fit:contain;" />`:'<span class="pin"></span>'}${escapeHtml(p.name)}${p.id===myId?' (you)':''}</span>`).join('')}
+        </div>
+        ${isHost ? `
+          <p class="muted" style="margin-top:12px;">${n<2?'Waiting for at least one more player…':'Ready when you are.'}</p>
+          <button class="btn red" id="startGameBtn" ${n<2?'disabled':''} style="margin-top:8px;">Start the game</button>
+        ` : `<p class="muted" style="margin-top:12px;">Waiting for the host to start the game…</p>`}
+      </div>
+    `;
+  }
+
+  // ---------- GAME dispatcher ----------
+  function gameHtml(){
+    if(!meta) return `<div class="panel"><p class="muted">Loading…</p></div>`;
+    switch(meta.status){
+      case 'mode_vote': return modeVoteHtml();
+      case 'chain': return chainHtml();
+      case 'chain_reveal': return revealHtml();
+      case 'chain_vote': return chainVoteHtml();
+      case 'chain_vote_results': return chainVoteResultsHtml();
+      case 'pict_choose': return pictChooseHtml();
+      case 'pict_draw': return pictDrawHtml();
+      case 'pict_results': return pictResultsHtml();
+      case 'impression_record': return impressionRecordHtml();
+      case 'impression_playback': return impressionPlaybackHtml();
+      case 'impression_vote': return impressionVoteHtml();
+      case 'impression_round_results': return impressionRoundResultsHtml();
+      case 'sound_record': return soundRecordHtml();
+      case 'sound_vote': return soundVoteHtml();
+      case 'sound_results': return soundResultsHtml();
+      case 'final': return finalHtml();
+      default: return `<div class="panel"><p class="muted">Loading…</p></div>`;
+    }
+  }
+
+  // ---- Mode vote (between every round) ----
+  function modeVoteHtml(){
+    const total = meta.N || (ui.players ? ui.players.length : 0);
+    const progressPct = total ? Math.round(100*ui.modeVoteProgress.count/total) : 0;
+    if(ui.modeVoteSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Vote locked in 🎲</h2>
+          ${phaseTimerHtml()}
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.modeVoteProgress.count} of ${total} voted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceModeResultBtn">Skip stragglers &amp; start</button>`:''}
+      `;
+    }
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">What should we play next?</h2>
+        ${phaseTimerHtml()}
+        ${rosterRowHtml()}
+        ${isHost ? `
+          <label class="field-label">Round length</label>
+          <div class="duration-picker">
+            ${DURATION_OPTIONS.map(sec=>`<div class="duration-btn ${sec===meta.roundDurationSec?'active':''}" data-duration="${sec}">${sec}s</div>`).join('')}
+          </div>
+        ` : ''}
+        ${MODES.map(m=>`
+          <div class="vote-option ${ui.modeVoteSelected===m.id?'selected':''}" data-modevote="${m.id}">
+            <div class="name">${escapeHtml(m.name)}</div>
+            <p class="lede" style="margin:0;">${escapeHtml(m.desc)}</p>
+          </div>
+        `).join('')}
+        <div class="vote-option ${ui.modeVoteSelected==='shuffle'?'selected':''}" data-modevote="shuffle">
+          <div class="name">🔀 Shuffle</div>
+          <p class="lede" style="margin:0;">Don't mind — pick something at random.</p>
+        </div>
+        <button class="btn mint" id="submitModeVoteBtn" ${!ui.modeVoteSelected?'disabled':''}>Submit vote</button>
+      </div>
+    `;
+  }
+
+  // ---- Chain round ----
+  function myChainTask(){
+    const N = meta.N, phase = meta.phaseIndex;
+    const myIndex = meta.chainOrder.indexOf(myId);
+    const ownerIndex = ((myIndex - phase) % N + N) % N;
+    const ownerId = meta.chainOrder[ownerIndex];
+    const ownerName = ui.players.find(p=>p.id===ownerId)?.name || '???';
+    let kind;
+    if(phase===0) kind='write';
+    else if(phase%2===1) kind='draw';
+    else kind='guess';
+    return {ownerId, ownerName, kind};
+  }
+
+  // ---------- shared phase timer (countdown + auto-skip) ----------
+  // Ticks locally every half-second from a shared meta.phaseStartedAt
+  // timestamp, so it doesn't need its own network round-trip. The actual
+  // auto-skip decision is made by the host inside refreshAndRender, reusing
+  // the same "advance" functions the manual skip buttons already call.
+  let timerTickId = null;
+  function stopTimerTicker(){ if(timerTickId){ clearInterval(timerTickId); timerTickId=null; } }
+  function startTimerTicker(){
+    stopTimerTicker();
+    updateTimerDisplay();
+    timerTickId = setInterval(updateTimerDisplay, 500);
+  }
+  function updateTimerDisplay(){
+    const el = document.getElementById('phaseTimer');
+    if(!el || !meta || !meta.phaseStartedAt) return;
+    const elapsed = (Date.now() - meta.phaseStartedAt) / 1000;
+    const remaining = Math.ceil((meta.phaseDurationSec || 60) - elapsed);
+    if(remaining > 0){
+      el.textContent = `⏱ ${remaining}s`;
+      el.classList.toggle('urgent', remaining <= 10);
+    } else {
+      el.textContent = `Time's up — waiting up to ${AUTO_SKIP_GRACE_SEC}s for stragglers…`;
+      el.classList.add('urgent');
+    }
+    // Stage Draw: update the masked word smoothly as hints reveal, rather
+    // than only on the slower ~1.8s network poll
+    if(meta.status==='pict_draw' && myId!==meta.pictDrawerId && meta.pictChosenWord){
+      const maskedEl = document.getElementById('maskedWord');
+      if(maskedEl){
+        const fraction = Math.min(1, elapsed / (meta.phaseDurationSec||60));
+        maskedEl.textContent = maskedWordDisplay(meta.pictChosenWord, fraction, meta.pictRoundId);
+      }
+    }
+  }
+  function phaseTimerHtml(){ return `<div class="phase-timer" id="phaseTimer"></div>`; }
+  const VOTE_GRACE_SEC = 5; // votes are quick taps — no need for a long stragglers window
+  function isPastDeadline(graceSec){
+    if(!meta || !meta.phaseStartedAt) return false;
+    const elapsed = (Date.now() - meta.phaseStartedAt) / 1000;
+    const grace = (graceSec===undefined) ? AUTO_SKIP_GRACE_SEC : graceSec;
+    return elapsed > (meta.phaseDurationSec || 60) + grace;
+  }
+
+  function rosterRowHtml(){
+    if(!ui.players || !ui.players.length) return '';
+    return `<div class="roster-row">${ui.players.map(p=>`
+      <div class="roster-chip" title="${escapeHtml(p.name)}">
+        ${p.character ? `<img src="${charById(p.character).file}" alt="${escapeHtml(p.name)}" />` : escapeHtml(p.name.slice(0,2).toUpperCase())}
+      </div>
+    `).join('')}</div>`;
+  }
+
+  function chainHtml(){
+    const task = myChainTask();
+    const total = meta.N;
+    const progressPct = total? Math.round(100*ui.chainProgress.count/total):0;
+
+    if(ui.chainSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Nice work! ✏️</h2>
+          <p class="lede">Waiting for everyone else to finish this step.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.chainProgress.count} of ${total} submitted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceNextChainBtn">Skip stragglers &amp; continue</button>`:''}
+        <p class="muted center">Step ${meta.phaseIndex+1} of ${meta.N}</p>
+      `;
+    }
+
+    if(task.kind==='write'){
+      return `
+        <div class="panel">
+          <h2 class="display" style="font-size:19px;">Write a phrase</h2>
+          ${phaseTimerHtml()}
+          ${rosterRowHtml()}
+          <p class="lede">Write anything short and drawable — a scene, a phrase, a weird combo of things. Someone else will have to draw it.</p>
+          <textarea id="chainTextInput" rows="3" placeholder="e.g. a penguin doing your taxes" maxlength="120"></textarea>
+          <div class="submit-row"><button class="btn mint compact" id="submitChainTextBtn">Submit phrase</button></div>
+        </div>
+        <p class="muted center">Step ${meta.phaseIndex+1} of ${meta.N}</p>
+      `;
+    }
+
+    // for draw/guess we need the previous content
+    const prev = ui.chainTaskCache;
+    if(task.kind==='draw'){
+      const prevText = prev && prev.type==='text' ? prev.content : '…';
+      return `
+        <div class="panel">
+          <h2 class="display" style="font-size:19px;">Draw this</h2>
+          ${phaseTimerHtml()}
+          ${rosterRowHtml()}
+          <div class="slide-card" style="margin-bottom:10px;padding:12px;"><div class="phrase">${escapeHtml(prevText)}</div></div>
+          <canvas class="draw-board" id="drawBoard"></canvas>
+          <div class="tool-panel">
+            <div class="tool-row wheel-block">
+              <div class="color-wheel" id="colorWheel"><div class="wheel-puck" id="wheelPuck"></div></div>
+              <div class="wheel-side">
+                <div class="current-color-swatch" id="currentColorSwatch" style="background:${currentColor};"></div>
+                <input type="range" class="lightness-slider" id="lightnessSlider" min="5" max="90" value="${currentLight}">
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-label">Pen</span>
+              ${PEN_SIZES.map(sz=>`
+                <div class="pen-size-btn ${(!isEraser && sz===currentSize)?'active':''}" data-size="${sz}" title="${sz}px">
+                  <div class="dot" style="width:${Math.max(4,sz*0.8)}px;height:${Math.max(4,sz*0.8)}px;"></div>
+                </div>
+              `).join('')}
+              <span class="tool-label" style="margin-left:6px;">Tools</span>
+              <div class="tool-btn ${isEraser?'active':''}" id="eraserBtn" title="Eraser">🧹</div>
+              <div class="tool-btn" id="undoBtn" title="Undo">↶</div>
+              <div class="tool-btn" id="redoBtn" title="Redo">↷</div>
+              <button class="btn small ghost" id="clearBoardBtn" style="margin-left:auto;">Clear</button>
+            </div>
+          </div>
+          <div class="submit-row"><button class="btn mint compact" id="submitDrawingBtn">Submit drawing</button></div>
+        </div>
+        <p class="muted center">Step ${meta.phaseIndex+1} of ${meta.N}</p>
+      `;
+    }
+    // guess
+    const prevImg = prev && prev.type==='drawing' ? prev.content : '';
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">What is this?</h2>
+        ${phaseTimerHtml()}
+        ${rosterRowHtml()}
+        <img class="drawing-img" src="${prevImg}" alt="A drawing to guess" />
+        <label class="field-label" style="margin-top:12px;">Your guess</label>
+        <textarea id="chainGuessInput" rows="2" placeholder="Describe what you see" maxlength="120"></textarea>
+        <div class="submit-row"><button class="btn mint compact" id="submitGuessBtn">Submit guess</button></div>
+      </div>
+      <p class="muted center">Step ${meta.phaseIndex+1} of ${meta.N}</p>
+    `;
+  }
+
+  function hslToHex(h,s,l){
+    s/=100; l/=100;
+    const k = n => (n + h/30) % 12;
+    const a = s * Math.min(l, 1-l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
+    const toHex = x => Math.round(255*x).toString(16).padStart(2,'0');
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+  }
+
+  function updateCurrentColor(){
+    currentColor = hslToHex(currentHue, currentSat, currentLight);
+    const sw = document.getElementById('currentColorSwatch');
+    if(sw) sw.style.background = currentColor;
+  }
+
+  function positionWheelPuck(){
+    const wheel = document.getElementById('colorWheel');
+    const puck = document.getElementById('wheelPuck');
+    if(!wheel || !puck) return;
+    const r = wheel.clientWidth/2;
+    const dist = (currentSat/100) * r;
+    const rad = (currentHue - 90) * Math.PI/180;
+    puck.style.left = (r + dist*Math.cos(rad)) + 'px';
+    puck.style.top = (r + dist*Math.sin(rad)) + 'px';
+    puck.style.background = currentColor;
+  }
+
+  function pushUndoSnapshot(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !canvasCtx) return;
+    try{
+      undoStack.push(canvasCtx.getImageData(0,0,canvas.width,canvas.height));
+      if(undoStack.length > 25) undoStack.shift();
+      redoStack = [];
+      updateUndoRedoButtons();
+    }catch(e){}
+  }
+  function updateUndoRedoButtons(){
+    const u = document.getElementById('undoBtn');
+    const r = document.getElementById('redoBtn');
+    if(u) u.style.opacity = undoStack.length>1 ? '1' : '0.3';
+    if(r) r.style.opacity = redoStack.length>0 ? '1' : '0.3';
+  }
+  function doUndo(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !canvasCtx || undoStack.length<=1) return;
+    const current = undoStack.pop();
+    redoStack.push(current);
+    canvasCtx.putImageData(undoStack[undoStack.length-1], 0, 0);
+    updateUndoRedoButtons();
+  }
+  function doRedo(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !canvasCtx || !redoStack.length) return;
+    const next = redoStack.pop();
+    undoStack.push(next);
+    canvasCtx.putImageData(next, 0, 0);
+    updateUndoRedoButtons();
+  }
+
+  function setupCanvasIfNeeded(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas) return;
+    if(canvasCtx && canvas.dataset.wired==='1') return; // already set up for this task — don't reset the drawing
+    canvas.width = canvas.clientWidth * 2;
+    canvas.height = canvas.clientHeight * 2;
+    const ctx2d = canvas.getContext('2d');
+    ctx2d.fillStyle = '#fff';
+    ctx2d.fillRect(0,0,canvas.width,canvas.height);
+    ctx2d.lineJoin='round'; ctx2d.lineCap='round';
+    canvasCtx = ctx2d;
+    canvas.dataset.wired = '1';
+
+    // fresh tool state for each new drawing task
+    currentHue=252; currentSat=45; currentLight=22; currentSize=8; isEraser=false;
+    updateCurrentColor();
+    positionWheelPuck();
+    // the HTML for the pen/eraser buttons was built with the *previous* task's
+    // settings, so sync their active classes to the freshly-reset state
+    document.querySelectorAll('.pen-size-btn').forEach(b=>{
+      b.classList.toggle('active', parseInt(b.getAttribute('data-size'),10)===currentSize);
+    });
+    const eraserBtnEl = document.getElementById('eraserBtn');
+    if(eraserBtnEl) eraserBtnEl.classList.remove('active');
+    const lightSlider = document.getElementById('lightnessSlider');
+    if(lightSlider) lightSlider.value = currentLight;
+    undoStack=[]; redoStack=[];
+    pushUndoSnapshot(); // blank canvas as the first undo state
+
+    let last=null;
+    function posFromEvent(e){
+      const rect = canvas.getBoundingClientRect();
+      const cx = (e.touches? e.touches[0].clientX : e.clientX) - rect.left;
+      const cy = (e.touches? e.touches[0].clientY : e.clientY) - rect.top;
+      return { x: cx * (canvas.width/rect.width), y: cy * (canvas.height/rect.height) };
+    }
+    function start(e){ drawing=true; last=posFromEvent(e); e.preventDefault(); }
+    function move(e){
+      if(!drawing) return;
+      const p = posFromEvent(e);
+      ctx2d.strokeStyle = isEraser ? '#ffffff' : currentColor;
+      ctx2d.lineWidth = (isEraser ? currentSize*2.2 : currentSize) * 2; // *2 to match the 2x canvas backing resolution
+      ctx2d.beginPath(); ctx2d.moveTo(last.x,last.y); ctx2d.lineTo(p.x,p.y); ctx2d.stroke();
+      last = p; e.preventDefault();
+    }
+    function end(){
+      if(drawing) pushUndoSnapshot();
+      drawing=false;
+    }
+    canvas.addEventListener('mousedown',start); canvas.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+    canvas.addEventListener('touchstart',start,{passive:false}); canvas.addEventListener('touchmove',move,{passive:false}); canvas.addEventListener('touchend',end);
+
+    // ---- color wheel ----
+    const wheel = document.getElementById('colorWheel');
+    if(wheel){
+      let picking=false;
+      function pickFromEvent(e){
+        const rect = wheel.getBoundingClientRect();
+        const cx = (e.touches? e.touches[0].clientX : e.clientX) - rect.left - rect.width/2;
+        const cy = (e.touches? e.touches[0].clientY : e.clientY) - rect.top - rect.height/2;
+        let dist = Math.sqrt(cx*cx + cy*cy) / (rect.width/2);
+        dist = Math.min(1, dist);
+        let angle = Math.atan2(cy, cx) * 180/Math.PI + 90;
+        if(angle < 0) angle += 360;
+        currentHue = angle;
+        currentSat = Math.round(dist*100);
+        updateCurrentColor();
+        positionWheelPuck();
+      }
+      function wheelStart(e){ picking=true; pickFromEvent(e); e.preventDefault(); }
+      function wheelMove(e){ if(!picking) return; pickFromEvent(e); e.preventDefault(); }
+      function wheelEnd(){ picking=false; }
+      wheel.addEventListener('mousedown',wheelStart); wheel.addEventListener('mousemove',wheelMove); window.addEventListener('mouseup',wheelEnd);
+      wheel.addEventListener('touchstart',wheelStart,{passive:false}); wheel.addEventListener('touchmove',wheelMove,{passive:false}); wheel.addEventListener('touchend',wheelEnd);
+    }
+  }
+
+  // ---- Chain reveal ----
+  function revealHtml(){
+    const chains = ui.revealChains;
+    if(!chains.length) return `<div class="panel"><p class="muted">Gathering the chains…</p></div>`;
+    const owner = chains[ui.revealOwnerIdx];
+    const step = owner.steps[ui.revealStepIdx];
+    const isImg = step && step.type==='drawing';
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:18px;">${escapeHtml(owner.ownerName)}'s chain</h2>
+        <div class="chip-row">
+          ${chains.map((c,i)=>`<button class="chip ${i===ui.revealOwnerIdx?'active':''}" data-owner="${i}">${escapeHtml(c.ownerName)}</button>`).join('')}
+        </div>
+        <div class="slide-card">
+          ${isImg ? `<img class="drawing-img" src="${step.content}" style="border:none;" />` : `<div class="phrase">${escapeHtml(step ? step.content : '')}</div>`}
+          <div class="by">${step ? (step.byPlayerId===owner.ownerId && ui.revealStepIdx===0 ? 'the original phrase' : 'by '+escapeHtml(step.byName)+(playerChar(step.byPlayerId) ? ` ${charIconImg(playerChar(step.byPlayerId), 18)}` : '')) : ''}</div>
+        </div>
+        <div class="nav-row">
+          <button class="btn small ghost" id="revealPrevBtn" ${ui.revealStepIdx===0?'disabled':''}>← Back</button>
+          <span class="muted">${ui.revealStepIdx+1} / ${owner.steps.length}</span>
+          <button class="btn small ghost" id="revealNextBtn" ${ui.revealStepIdx===owner.steps.length-1?'disabled':''}>Next →</button>
+        </div>
+      </div>
+      ${isHost ? `
+        <button class="btn red" id="voteFunniestChainBtn">Vote for funniest chain →</button>
+      ` : `<p class="muted center">Waiting for the host to start the vote…</p>`}
+    `;
+  }
+
+  // ---- Chain vote (who told the funniest/weirdest chain) ----
+  function chainVoteHtml(){
+    const total = meta.N;
+    const progressPct = total ? Math.round(100*ui.chainVoteProgress.count/total) : 0;
+    if(ui.chainVoteSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Vote locked in 🗳️</h2>
+          ${phaseTimerHtml()}
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.chainVoteProgress.count} of ${total} voted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceChainVoteResultBtn">Skip stragglers &amp; show results</button>`:''}
+      `;
+    }
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Vote for the funniest chain</h2>
+        ${phaseTimerHtml()}
+        <p class="lede">You can't vote for your own chain.</p>
+        ${ui.revealChains.filter(c=>c.ownerId!==myId).map(c=>{
+          const last = c.steps[c.steps.length-1];
+          const isImg = last && last.type==='drawing';
+          return `
+            <div class="vote-option ${ui.chainVoteSelected===c.ownerId?'selected':''}" data-chainvote="${c.ownerId}">
+              <div class="name">${escapeHtml(c.ownerName)}'s chain</div>
+              ${isImg ? `<img class="drawing-img" src="${last.content}" style="max-height:130px;object-fit:contain;" />` : `<p class="lede" style="margin:0;">"${escapeHtml(last?last.content:'')}"</p>`}
+            </div>
+          `;
+        }).join('')}
+        <button class="btn mint" id="submitChainVoteBtn" ${!ui.chainVoteSelected?'disabled':''}>Submit vote</button>
+      </div>
+    `;
+  }
+
+  function chainVoteResultsHtml(){
+    const rows = ui.chainVoteTally;
+    const max = rows.length ? Math.max(...rows.map(r=>r.votes),1) : 1;
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Chain vote results</h2>
+        ${rows.map((r,i)=>`
+          <div class="leader-row">
+            <div class="rank">${i===0?'🏆':i+1}</div>
+            <div style="flex:1;font-weight:600;">${escapeHtml(r.name)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(100*r.votes/max)}%"></div></div>
+            <div>${r.votes}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${isHost ? `
+        <button class="btn purple" id="nextModeFromChainBtn">Vote for next mode →</button>
+        <button class="btn red" id="finishFromChainBtn">Finish game — final results</button>
+      ` : `<p class="muted center">Waiting for the host to choose what's next…</p>`}
+    `;
+  }
+
+  // ---- Stage Draw: word choice ----
+  function pictChooseHtml(){
+    const isDrawer = myId === meta.pictDrawerId;
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">${isDrawer ? 'Pick a word to draw' : 'Get ready…'}</h2>
+        ${phaseTimerHtml()}
+        ${rosterRowHtml()}
+        ${isDrawer ? `
+          <p class="lede">Pick one — nobody else can see these choices.</p>
+          ${meta.pictWordChoices.map(w=>`<div class="word-choice-btn" data-word="${escapeHtml(w)}">${escapeHtml(w)}</div>`).join('')}
+        ` : `
+          <p class="lede center">${escapeHtml(meta.pictDrawerName)} is picking a word to draw. Get ready to guess!</p>
+        `}
+      </div>
+    `;
+  }
+
+  // ---- Stage Draw: drawing + guessing ----
+  function pictDrawHtml(){
+    const isDrawer = myId === meta.pictDrawerId;
+    if(isDrawer){
+      return `
+        <div class="panel">
+          <h2 class="display" style="font-size:19px;">You're drawing: ${escapeHtml(meta.pictChosenWord.toUpperCase())}</h2>
+          ${phaseTimerHtml()}
+          <p class="lede">Everyone else can see this canvas update every couple seconds. Keep drawing until time's up or everyone guesses it!</p>
+          <canvas class="draw-board" id="drawBoard"></canvas>
+          <div class="tool-panel">
+            <div class="tool-row wheel-block">
+              <div class="color-wheel" id="colorWheel"><div class="wheel-puck" id="wheelPuck"></div></div>
+              <div class="wheel-side">
+                <div class="current-color-swatch" id="currentColorSwatch" style="background:${currentColor};"></div>
+                <input type="range" class="lightness-slider" id="lightnessSlider" min="5" max="90" value="${currentLight}">
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-label">Pen</span>
+              ${PEN_SIZES.map(sz=>`
+                <div class="pen-size-btn ${(!isEraser && sz===currentSize)?'active':''}" data-size="${sz}" title="${sz}px">
+                  <div class="dot" style="width:${Math.max(4,sz*0.8)}px;height:${Math.max(4,sz*0.8)}px;"></div>
+                </div>
+              `).join('')}
+              <span class="tool-label" style="margin-left:6px;">Tools</span>
+              <div class="tool-btn ${isEraser?'active':''}" id="eraserBtn" title="Eraser">🧹</div>
+              <div class="tool-btn" id="undoBtn" title="Undo">↶</div>
+              <div class="tool-btn" id="redoBtn" title="Redo">↷</div>
+              <button class="btn small ghost" id="clearBoardBtn" style="margin-left:auto;">Clear</button>
+            </div>
+          </div>
+          <div class="pict-feed" id="pictFeed">${pictFeedRowsHtml()}</div>
+        </div>
+      `;
+    }
+    const elapsed = meta.phaseStartedAt ? (Date.now()-meta.phaseStartedAt)/1000 : 0;
+    const fraction = Math.min(1, elapsed / (meta.phaseDurationSec||60));
+    const masked = maskedWordDisplay(meta.pictChosenWord, fraction, meta.pictRoundId);
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">${escapeHtml(meta.pictDrawerName)} is drawing…</h2>
+        ${phaseTimerHtml()}
+        <div class="masked-word" id="maskedWord">${masked}</div>
+        <img class="stage-whiteboard" id="stageCanvasImg" src="${ui.pictStageImg||''}" alt="The live drawing" />
+        <div class="pict-feed" id="pictFeed">${pictFeedRowsHtml()}</div>
+        ${ui.pictGuessedCorrectly ? `
+          <div class="panel tight" style="border-color:var(--mint);text-align:center;"><strong>✅ You got it!</strong> Waiting for everyone else…</div>
+        ` : `
+          <input type="text" id="pictGuessInput" placeholder="Type your guess…" value="${escapeHtml(ui.pictGuessInput)}" maxlength="40">
+          <button class="btn mint" id="submitPictGuessBtn">Guess</button>
+        `}
+      </div>
+    `;
+  }
+
+  // ---- Stage Draw: results ----
+  function pictResultsHtml(){
+    const r = ui.pictResults || { word:meta.pictChosenWord, drawerName:meta.pictDrawerName, scored:[], everyoneGotIt:false };
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">The word was: ${escapeHtml((r.word||'').toUpperCase())}</h2>
+        ${r.scored.length ? r.scored.map((s,i)=>`
+          <div class="leader-row">
+            <div class="rank">${i===0?'🥇':'🥈'}</div>
+            <div style="flex:1;font-weight:600;">${escapeHtml(s.name)}</div>
+            <div>+${s.points}</div>
+          </div>
+        `).join('') : `<p class="muted center">Nobody guessed it this time.</p>`}
+        ${r.everyoneGotIt ? `
+          <div class="panel tight" style="border-color:var(--yellow);margin-top:10px;text-align:center;">
+            <strong>Everyone guessed it!</strong> ${escapeHtml(r.drawerName)} earns a +3 bonus for a great drawing.
+          </div>
+        ` : ''}
+      </div>
+      ${isHost ? `
+        <button class="btn purple" id="nextModeFromPictBtn">Vote for next mode →</button>
+        <button class="btn red" id="finishFromPictBtn">Finish game — final results</button>
+      ` : `<p class="muted center">Waiting for the host to choose what's next…</p>`}
+    `;
+  }
+
+  // ---- Impression Stage: recording ----
+  function impressionRecordHtml(){
+    const total = meta.N;
+    const progressPct = total ? Math.round(100*ui.imprProgress.count/total) : 0;
+    if(ui.imprSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Nice! 🎙️</h2>
+          <p class="lede">Nobody can hear it yet — waiting for everyone else.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.imprProgress.count} of ${total} submitted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceImprPlaybackBtn">Skip stragglers &amp; play them back</button>`:''}
+      `;
+    }
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Prompt ${meta.imprRoundNum} of 5</h2>
+        ${phaseTimerHtml()}
+        ${rosterRowHtml()}
+        <div class="impr-prompt-card">
+          <div class="label">ACT THIS OUT</div>
+          <div class="prompt">${escapeHtml(meta.imprPrompt)}</div>
+        </div>
+        ${ui.imprMicDenied ? `
+          <div class="error-box">Couldn't get microphone access in this browser, so there's no way to record for this round.</div>
+        ` : `
+          <div class="mic-circle ${ui.recording?'recording':''}" id="imprMicCircle">${ui.recording?'■':'🎤'}</div>
+          <p class="muted center">${ui.recording? 'Recording… tap to stop' : 'Tap the mic and go for it — only you can hear it before you submit'}</p>
+          ${ui.imprRecordedUrl ? `
+            <audio id="imprMyTakeAudio" src="${ui.imprRecordedUrl}" style="display:none;"></audio>
+            <button class="btn purple" id="playImprTakeBtn">▶ Play my recording</button>
+            <button class="btn mint" id="submitImprBtn">Submit this take</button>
+            <button class="btn ghost" id="imprRetakeBtn">Record again</button>
+          ` : ''}
+        `}
+      </div>
+    `;
+  }
+
+  // ---- Impression Stage: sequential stage playback ----
+  function impressionPlaybackHtml(){
+    const order = meta.imprOrder || [];
+    const idx = meta.imprPlaybackIndex || 0;
+    const currentPid = order[idx];
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Now playing…</h2>
+        <div class="impr-prompt-card">
+          <div class="label">THE PROMPT WAS</div>
+          <div class="prompt">${escapeHtml(meta.imprPrompt)}</div>
+        </div>
+        <div class="impr-stage-row">
+          ${order.map(pid=>{
+            const p = ui.players.find(pl=>pl.id===pid);
+            const isSpeaking = pid===currentPid;
+            return `
+              <div class="impr-stage-col">
+                <div class="impr-stage-badge ${isSpeaking?'speaking':''}">
+                  ${p && p.character ? `<img src="${charById(p.character).file}" alt="" />` : ''}
+                </div>
+                <div class="impr-stage-name">${p?escapeHtml(p.name):'???'}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <p class="muted center">${idx+1} of ${order.length}</p>
+        <audio id="imprPlaybackAudio" autoplay></audio>
+      </div>
+    `;
+  }
+
+  // ---- Impression Stage: voting ----
+  function impressionVoteHtml(){
+    const total = meta.N;
+    const progressPct = total ? Math.round(100*ui.imprVoteProgress.count/total) : 0;
+    if(ui.imprVoteSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Vote locked in 🗳️</h2>
+          ${phaseTimerHtml()}
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.imprVoteProgress.count} of ${total} voted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceImprVoteResultBtn">Skip stragglers &amp; show results</button>`:''}
+      `;
+    }
+    const order = meta.imprOrder || [];
+    return `
+      <div class="panel center">
+        ${phaseTimerHtml()}
+        <p class="lede" style="color:var(--mint);font-weight:700;">VOTE FOR ONE</p>
+        <div class="impr-prompt-card">
+          <div class="prompt">${escapeHtml(meta.imprPrompt)}</div>
+        </div>
+        <div class="impr-vote-grid">
+          ${order.map(pid=>{
+            const p = ui.players.find(pl=>pl.id===pid);
+            const isSelf = pid===myId;
+            return `
+              <div class="impr-stage-col">
+                <div class="impr-vote-badge ${ui.imprVoteSelected===pid?'selected':''} ${isSelf?'disabled':''}" ${isSelf?'':`data-imprvote="${pid}"`}>
+                  ${p && p.character ? `<img src="${charById(p.character).file}" alt="" />` : ''}
+                </div>
+                <div class="impr-stage-name">${p?escapeHtml(p.name):'???'}${isSelf?' (you)':''}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <button class="btn mint" id="submitImprVoteBtn" ${!ui.imprVoteSelected?'disabled':''}>Submit vote</button>
+      </div>
+    `;
+  }
+
+  // ---- Impression Stage: per-prompt results ----
+  function impressionRoundResultsHtml(){
+    const rows = ui.imprRoundTally;
+    const max = rows.length ? Math.max(...rows.map(r=>r.votes),1) : 1;
+    const isLast = (meta.imprRoundNum||1) >= 5;
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Prompt ${meta.imprRoundNum} of 5 — results</h2>
+        <p class="muted center">"${escapeHtml(meta.imprPrompt)}"</p>
+        ${rows.map((r,i)=>`
+          <div class="leader-row">
+            <div class="rank">${i===0?'🏆':i+1}</div>
+            <div style="flex:1;font-weight:600;">${escapeHtml(r.name)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(100*r.votes/max)}%"></div></div>
+            <div>${r.votes}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${isHost ? `
+        <button class="btn purple" id="imprContinueBtn">${isLast ? 'Vote for next mode →' : 'Next prompt →'}</button>
+        ${isLast ? `<button class="btn red" id="finishFromImprBtn">Finish game — final results</button>` : ''}
+      ` : `<p class="muted center">Waiting for the host to continue…</p>`}
+    `;
+  }
+
+  // ---- Sound record ----
+  function soundRecordHtml(){
+    const preset = getSoundDef(meta.soundPreset) || { name:'Mystery Sound', desc:'' };
+    const total = meta.N;
+    const progressPct = total? Math.round(100*ui.soundProgress.count/total):0;
+
+    if(ui.soundSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Got it! 🎙️</h2>
+          <p class="lede">Waiting for everyone else to record their impression.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.soundProgress.count} of ${total} submitted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceVoteBtn">Skip stragglers &amp; start voting</button>`:''}
+      `;
+    }
+
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">${escapeHtml(preset.name)}</h2>
+        ${phaseTimerHtml()}
+        ${rosterRowHtml()}
+        <p class="lede">${escapeHtml(preset.desc)}</p>
+        <button class="btn purple" id="playPresetBtn">▶ Play the sound</button>
+        <canvas class="wave-canvas" id="waveCanvas"></canvas>
+        <p class="muted center" style="margin-top:-4px;"><span style="color:var(--purple);">■</span> the target sound &nbsp; <span style="color:var(--red);">■</span> your voice</p>
+        ${ui.micDenied ? `
+          <div class="error-box">Couldn't get microphone access in this browser, so there's no way to record an impression for this round. This usually happens automatically for anyone who isn't the host on plain WiFi — the host can still play from their own device.</div>
+        ` : `
+          <div class="mic-circle ${ui.recording?'recording':''}" id="micCircle">${ui.recording?'■':'🎤'}</div>
+          <p class="muted center">${ui.recording? 'Recording… tap to stop' : 'Tap the mic, then imitate the sound with your voice'}</p>
+          ${ui.recordedUrl ? `
+            <audio id="myTakeAudio" src="${ui.recordedUrl}" style="display:none;"></audio>
+            <button class="btn purple" id="playMyTakeBtn">▶ Play my recording</button>
+            <button class="btn mint" id="submitSoundBtn">Submit this take</button>
+            <button class="btn ghost" id="retakeBtn">Record again</button>
+          ` : ''}
+        `}
+      </div>
+    `;
+  }
+
+  // ---- Sound vote ----
+  function soundVoteHtml(){
+    const total = meta.N;
+    const progressPct = total? Math.round(100*ui.voteProgress.count/total):0;
+    if(ui.voteSubmitted){
+      return `
+        <div class="panel center">
+          <h2 class="display" style="font-size:19px;">Vote locked in 🗳️</h2>
+          <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+          <p class="muted">${ui.voteProgress.count} of ${total} voted</p>
+        </div>
+        ${isHost ? `<button class="btn ghost" id="forceResultsBtn">Skip stragglers &amp; show results</button>`:''}
+      `;
+    }
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Vote for the best impression</h2>
+        ${phaseTimerHtml()}
+        <p class="lede">You can't vote for yourself.</p>
+        ${ui.voteEntries.filter(e=>e.pid!==myId).map(e=>`
+          <div class="vote-option ${ui.voteSelected===e.pid?'selected':''}" data-vote="${e.pid}">
+            <div class="name" style="display:flex;align-items:center;gap:8px;">
+              ${playerChar(e.pid) ? `<img src="${charById(playerChar(e.pid)).file}" alt="" style="width:26px;height:26px;object-fit:contain;" />` : ''}
+              ${escapeHtml(e.name)}
+            </div>
+            ${e.type==='audio' ? `
+              <audio id="voteAudio_${e.pid}" src="${e.audio}" style="display:none;"></audio>
+              <button class="btn purple small vote-play-btn" type="button" data-audio="voteAudio_${e.pid}">▶ Play their impression</button>
+            ` : `<p class="lede" style="margin:0;">"${escapeHtml(e.text)}"</p>`}
+          </div>
+        `).join('')}
+        <button class="btn mint" id="submitVoteBtn" ${!ui.voteSelected?'disabled':''}>Submit vote</button>
+      </div>
+    `;
+  }
+
+  // ---- Sound round results ----
+  function soundResultsHtml(){
+    const rows = ui.roundTally;
+    const max = rows.length ? Math.max(...rows.map(r=>r.votes),1) : 1;
+    return `
+      <div class="panel">
+        <h2 class="display" style="font-size:19px;">Round results</h2>
+        ${rows.map((r,i)=>`
+          <div class="leader-row">
+            <div class="rank">${i===0?'🏆':i+1}</div>
+            <div style="flex:1;font-weight:600;">${escapeHtml(r.name)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(100*r.votes/max)}%"></div></div>
+            <div>${r.votes}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${isHost ? `
+        <button class="btn purple" id="nextModeFromSoundBtn">Vote for next mode →</button>
+        <button class="btn red" id="finishGameBtn">Finish game — final results</button>
+      ` : `<p class="muted center">Waiting for the host to choose what's next…</p>`}
+    `;
+  }
+
+  // ---- Final ----
+  function finalHtml(){
+    const rows = ui.finalTally;
+    const max = rows.length ? Math.max(...rows.map(r=>r.wins),1) : 1;
+    return `
+      <div class="panel center">
+        <h2 class="display" style="font-size:22px;">🏆 ${rows[0] ? escapeHtml(rows[0].name) : '???'} is the Champion</h2>
+        <p class="lede">Final standings — ranked by rounds won.</p>
+      </div>
+      <div class="panel">
+        ${rows.map((r,i)=>`
+          <div class="leader-row">
+            <div class="rank">${i===0?'🏆':i+1}</div>
+            ${r.character ? `<img src="${charById(r.character).file}" alt="" style="width:28px;height:28px;object-fit:contain;margin-right:8px;" />` : ''}
+            <div style="flex:1;font-weight:600;">${escapeHtml(r.name)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(100*r.wins/max)}%"></div></div>
+            <div>${r.wins}</div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn ghost" id="viewChainsAgainBtn">Revisit the drawing chains</button>
+      <p class="footer-note">Thanks for playing. Refresh this page to start a brand new lobby.</p>
+    `;
+  }
+
+  // ---------- events ----------
+  function on(id, evt, fn){ const el=document.getElementById(id); if(el) el.addEventListener(evt, fn); }
+  function wireCharGrid(){
+    document.querySelectorAll('.char-badge').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        selectedCharacter = el.getAttribute('data-char');
+        document.querySelectorAll('.char-badge').forEach(b=>b.classList.remove('active'));
+        el.classList.add('active');
+      });
+    });
+  }
+
+  function wireEvents(){
+    if(view==='home'){
+      on('hostNameInput','input', e=>ui.hostNameInput=e.target.value);
+      on('createBtn','click', createLobby);
+      on('goJoinBtn','click', ()=>{ view='join'; render(); });
+      on('buyAccessBtn','click', buyAccess);
+      on('redeemBtn','click', redeemCode);
+      wireCharGrid();
+      on('showCodeLink','click', (e)=>{
+        e.preventDefault();
+        const box = document.getElementById('codeReveal');
+        if(box) box.style.display = box.style.display==='none' ? 'block' : 'none';
+      });
+    } else if(view==='join'){
+      on('joinCodeInput','input', e=>ui.joinCodeInput=e.target.value.toUpperCase());
+      on('joinNameInput','input', e=>ui.joinNameInput=e.target.value);
+      on('joinBtn','click', joinLobby);
+      on('backHomeBtn','click', ()=>{ view='home'; errorMsg=''; render(); });
+      wireCharGrid();
+    } else if(view==='lobby'){
+      on('copyCodeBtn','click', ()=>{
+        if(navigator.clipboard) navigator.clipboard.writeText(lobbyCode).catch(()=>{});
+        const b=document.getElementById('copyCodeBtn'); if(b){ b.textContent='Copied!'; setTimeout(()=>{ if(b) b.textContent='Copy code'; },1200); }
+      });
+      on('startGameBtn','click', startGame);
+    } else if(view==='game' && meta){
+      stopTimerTicker(); // restart fresh below only for screens that need it
+      stopStageSnapshotLoop(); // ditto for the Stage Draw canvas sync loop
+      stopStageViewLoop();
+      if(meta.status==='mode_vote'){
+        startTimerTicker();
+        if(!ui.modeVoteSubmitted){
+          document.querySelectorAll('.duration-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>setRoundDuration(parseInt(btn.getAttribute('data-duration'),10)));
+          });
+          document.querySelectorAll('[data-modevote]').forEach(el=>{
+            el.addEventListener('click', ()=>{ ui.modeVoteSelected=el.getAttribute('data-modevote'); render(); });
+          });
+          on('submitModeVoteBtn','click', submitModeVote);
+        } else {
+          on('forceModeResultBtn','click', finalizeModeVote);
+        }
+      } else if(meta.status==='chain'){
+        if(!ui.chainSubmitted){
+          startTimerTicker();
+          setupCanvasIfNeeded();
+          const task = myChainTask();
+
+          on('lightnessSlider','input', (e)=>{
+            currentLight = parseInt(e.target.value, 10);
+            updateCurrentColor();
+            positionWheelPuck();
+          });
+
+          document.querySelectorAll('.pen-size-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+              currentSize = parseInt(btn.getAttribute('data-size'), 10);
+              isEraser = false;
+              document.querySelectorAll('.pen-size-btn').forEach(b=>b.classList.remove('active'));
+              btn.classList.add('active');
+              const eb = document.getElementById('eraserBtn'); if(eb) eb.classList.remove('active');
+            });
+          });
+
+          on('eraserBtn','click', ()=>{
+            isEraser = !isEraser;
+            const eb = document.getElementById('eraserBtn'); if(eb) eb.classList.toggle('active', isEraser);
+            if(isEraser) document.querySelectorAll('.pen-size-btn').forEach(b=>b.classList.remove('active'));
+          });
+
+          on('undoBtn','click', doUndo);
+          on('redoBtn','click', doRedo);
+          updateUndoRedoButtons();
+
+          on('clearBoardBtn','click', ()=>{
+            const c=document.getElementById('drawBoard');
+            if(canvasCtx && c){
+              canvasCtx.fillStyle='#fff'; canvasCtx.fillRect(0,0,c.width,c.height);
+              pushUndoSnapshot();
+            }
+          });
+          on('submitChainTextBtn','click', ()=>submitChainText(task));
+          on('submitDrawingBtn','click', ()=>submitChainDrawing(task));
+          on('submitGuessBtn','click', ()=>submitChainGuess(task));
+        } else {
+          on('forceNextChainBtn','click', hostForceAdvanceChain);
+        }
+      } else if(meta.status==='chain_reveal'){
+        document.querySelectorAll('[data-owner]').forEach(el=>{
+          el.addEventListener('click', ()=>{ ui.revealOwnerIdx=parseInt(el.getAttribute('data-owner')); ui.revealStepIdx=0; render(); });
+        });
+        on('revealPrevBtn','click', ()=>{ ui.revealStepIdx=Math.max(0,ui.revealStepIdx-1); render(); });
+        on('revealNextBtn','click', ()=>{ ui.revealStepIdx=Math.min(ui.revealChains[ui.revealOwnerIdx].steps.length-1, ui.revealStepIdx+1); render(); });
+        on('voteFunniestChainBtn','click', startChainVote);
+      } else if(meta.status==='chain_vote'){
+        if(!ui.chainVoteSubmitted){
+          startTimerTicker();
+          document.querySelectorAll('[data-chainvote]').forEach(el=>{
+            el.addEventListener('click', ()=>{ ui.chainVoteSelected=el.getAttribute('data-chainvote'); render(); });
+          });
+          on('submitChainVoteBtn','click', submitChainVote);
+        } else {
+          on('forceChainVoteResultBtn','click', showChainVoteResults);
+        }
+      } else if(meta.status==='chain_vote_results'){
+        on('nextModeFromChainBtn','click', startModeVote);
+        on('finishFromChainBtn','click', finishGame);
+      } else if(meta.status==='pict_choose'){
+        startTimerTicker();
+        document.querySelectorAll('.word-choice-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=>chooseWord(btn.getAttribute('data-word')));
+        });
+      } else if(meta.status==='pict_draw'){
+        const isDrawer = myId === meta.pictDrawerId;
+        if(isDrawer){
+          startStageSnapshotLoop();
+          setupCanvasIfNeeded();
+          on('lightnessSlider','input', (e)=>{
+            currentLight = parseInt(e.target.value, 10);
+            updateCurrentColor();
+            positionWheelPuck();
+          });
+          document.querySelectorAll('.pen-size-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+              currentSize = parseInt(btn.getAttribute('data-size'), 10);
+              isEraser = false;
+              document.querySelectorAll('.pen-size-btn').forEach(b=>b.classList.remove('active'));
+              btn.classList.add('active');
+              const eb = document.getElementById('eraserBtn'); if(eb) eb.classList.remove('active');
+            });
+          });
+          on('eraserBtn','click', ()=>{
+            isEraser = !isEraser;
+            const eb = document.getElementById('eraserBtn'); if(eb) eb.classList.toggle('active', isEraser);
+            if(isEraser) document.querySelectorAll('.pen-size-btn').forEach(b=>b.classList.remove('active'));
+          });
+          on('undoBtn','click', doUndo);
+          on('redoBtn','click', doRedo);
+          updateUndoRedoButtons();
+          on('clearBoardBtn','click', ()=>{
+            const c=document.getElementById('drawBoard');
+            if(canvasCtx && c){
+              canvasCtx.fillStyle='#fff'; canvasCtx.fillRect(0,0,c.width,c.height);
+              pushUndoSnapshot();
+            }
+          });
+        } else {
+          startTimerTicker();
+          startStageViewLoop();
+          on('pictGuessInput','input', e=>ui.pictGuessInput=e.target.value);
+          on('submitPictGuessBtn','click', submitPictGuess);
+        }
+      } else if(meta.status==='pict_results'){
+        on('nextModeFromPictBtn','click', startModeVote);
+        on('finishFromPictBtn','click', finishGame);
+      } else if(meta.status==='impression_record'){
+        if(!ui.imprSubmitted){
+          startTimerTicker();
+          on('imprMicCircle','click', toggleImpressionRecording);
+          on('playImprTakeBtn','click', ()=>{ const a=document.getElementById('imprMyTakeAudio'); if(a){ a.currentTime=0; a.play(); } });
+          on('submitImprBtn','click', submitImpression);
+          on('imprRetakeBtn','click', ()=>{ ui.imprRecordedBlob=null; ui.imprRecordedUrl=null; render(); });
+        } else {
+          on('forceImprPlaybackBtn','click', startImpressionPlayback);
+        }
+      } else if(meta.status==='impression_playback'){
+        playCurrentImpressionClip();
+      } else if(meta.status==='impression_vote'){
+        if(!ui.imprVoteSubmitted){
+          startTimerTicker();
+          document.querySelectorAll('[data-imprvote]').forEach(el=>{
+            el.addEventListener('click', ()=>{ ui.imprVoteSelected=el.getAttribute('data-imprvote'); render(); });
+          });
+          on('submitImprVoteBtn','click', submitImpressionVote);
+        } else {
+          on('forceImprVoteResultBtn','click', finishImpressionRound);
+        }
+      } else if(meta.status==='impression_round_results'){
+        on('imprContinueBtn','click', continueImpressionOrFinish);
+        on('finishFromImprBtn','click', finishGame);
+      } else if(meta.status==='sound_record'){
+        if(!ui.soundSubmitted){
+          startTimerTicker();
+          renderWaveCanvas(); // draw the baseline even before Play is pressed
+          on('playPresetBtn','click', ()=>{ const def=getSoundDef(meta.soundPreset); if(def) playTargetSound(def); });
+          on('micCircle','click', toggleRecording);
+          on('playMyTakeBtn','click', ()=>{ const a=document.getElementById('myTakeAudio'); if(a){ a.currentTime=0; a.play(); } });
+          on('submitSoundBtn','click', submitSound);
+          on('retakeBtn','click', ()=>{ ui.recordedBlob=null; ui.recordedUrl=null; liveEnvelope=[]; renderWaveCanvas(); render(); });
+        } else {
+          on('forceVoteBtn','click', hostForceStartVote);
+        }
+      } else if(meta.status==='sound_vote'){
+        if(!ui.voteSubmitted){
+          startTimerTicker();
+          document.querySelectorAll('[data-vote]').forEach(el=>{
+            el.addEventListener('click', ()=>{ ui.voteSelected=el.getAttribute('data-vote'); render(); });
+          });
+          document.querySelectorAll('.vote-play-btn').forEach(btn=>{
+            btn.addEventListener('click', (e)=>{
+              e.stopPropagation(); // don't also register this tap as selecting the vote
+              const audioEl = document.getElementById(btn.getAttribute('data-audio'));
+              if(audioEl){ audioEl.currentTime = 0; audioEl.play(); }
+            });
+          });
+          on('submitVoteBtn','click', submitVote);
+        } else {
+          on('forceResultsBtn','click', hostForceShowResults);
+        }
+      } else if(meta.status==='sound_results'){
+        on('nextModeFromSoundBtn','click', startModeVote);
+        on('finishGameBtn','click', finishGame);
+      } else if(meta.status==='final'){
+        on('viewChainsAgainBtn','click', async ()=>{ await loadReveal(); meta = Object.assign({}, meta, {status:'chain_reveal'}); render(); });
+      }
+    }
+  }
+
+  // ---------- actions: setup ----------
+  async function createLobby(){
+    if(paymentsCfg.paymentsEnabled && !hasAccess){ errorMsg='Hosting needs to be unlocked first — buy access or enter your code above.'; render(); return; }
+    const name = ui.hostNameInput.trim();
+    if(!name){ errorMsg='Enter your name first.'; render(); return; }
+    errorMsg='';
+    const code = genCode();
+    lobbyCode = code; isHost = true; myName = name;
+    const newMeta = { code, hostId: myId, status:'lobby', createdAt: Date.now(), soundRoundCount:0, soundRounds:[] };
+    await sSet(metaKey(), newMeta);
+    await sSet(playerKey(myId), {id:myId, name:myName, character:selectedCharacter, joinedAt:Date.now()});
+    meta = newMeta;
+    view='lobby';
+    render();
+    startPolling();
+  }
+
+  async function joinLobby(){
+    const code = ui.joinCodeInput.trim().toUpperCase();
+    const name = ui.joinNameInput.trim();
+    if(!code || code.length<5){ errorMsg='Enter the 5-character invite code.'; render(); return; }
+    if(!name){ errorMsg='Enter your name first.'; render(); return; }
+    const found = await sGet(`lobby:${code}:meta`);
+    if(!found){ errorMsg="Couldn't find a lobby with that code."; render(); return; }
+    errorMsg='';
+    lobbyCode = code; myName = name; isHost = (found.hostId===myId);
+    await sSet(playerKey(myId), {id:myId, name:myName, character:selectedCharacter, joinedAt:Date.now()});
+    meta = found;
+    view='lobby';
+    render();
+    startPolling();
+  }
+
+  async function fetchPlayers(){
+    const keys = await sListKeys(`lobby:${lobbyCode}:players:`);
+    const vals = await Promise.all(keys.map(k=>sGet(k)));
+    return vals.filter(Boolean).sort((a,b)=>a.joinedAt-b.joinedAt);
+  }
+
+  async function startGame(){
+    ui.players = await fetchPlayers();
+    await startModeVote();
+  }
+
+  // ---------- mode vote (runs between every round) ----------
+  async function startModeVote(){
+    ui.players = await fetchPlayers(); // refresh in case anyone joined mid-game
+    const newMeta = Object.assign({}, meta, {
+      status:'mode_vote',
+      modeVoteId: 'mv' + (meta.modeVoteCount||0),
+      modeVoteCount: (meta.modeVoteCount||0) + 1,
+      roundDurationSec: meta.roundDurationSec || 60,
+      N: ui.players.length,
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: 20 // fixed short window for the vote itself
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    view = 'game';
+    ui.modeVoteSelected = null; ui.modeVoteSubmitted = false;
+    render();
+  }
+  async function submitModeVote(){
+    if(!ui.modeVoteSelected) return;
+    await sSet(`lobby:${lobbyCode}:modevote:${meta.modeVoteId}:${myId}`, { choice: ui.modeVoteSelected });
+    ui.modeVoteSubmitted = true; render();
+  }
+  async function setRoundDuration(sec){
+    const newMeta = Object.assign({}, meta, { roundDurationSec: sec });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    // just update the buttons directly — no need to rebuild the whole screen
+    document.querySelectorAll('.duration-btn').forEach(b=>{
+      b.classList.toggle('active', parseInt(b.getAttribute('data-duration'),10)===sec);
+    });
+  }
+  async function finalizeModeVote(){
+    const keys = await sListKeys(`lobby:${lobbyCode}:modevote:${meta.modeVoteId}:`);
+    const votes = await Promise.all(keys.map(k=>sGet(k)));
+    const counts = {};
+    MODES.forEach(m=>counts[m.id]=0);
+    let shuffleCount = 0;
+    votes.forEach(v=>{
+      if(!v) return;
+      if(v.choice==='shuffle') shuffleCount++;
+      else if(counts[v.choice]!==undefined) counts[v.choice]++;
+    });
+    const maxConcrete = Math.max(0, ...MODES.map(m=>counts[m.id]));
+    let chosenId;
+    if(shuffleCount > maxConcrete || maxConcrete===0){
+      chosenId = MODES[Math.floor(Math.random()*MODES.length)].id;
+    } else {
+      const leaders = MODES.filter(m=>counts[m.id]===maxConcrete);
+      chosenId = leaders[Math.floor(Math.random()*leaders.length)].id;
+    }
+    if(chosenId==='chain') await beginChainMode();
+    else if(chosenId==='pictionary') await beginPictionaryMode();
+    else if(chosenId==='impression') await beginImpressionMode();
+    else await beginSoundMode();
+  }
+
+  async function beginChainMode(){
+    const chainOrder = ui.players.map(p=>p.id).sort(()=>Math.random()-0.5);
+    const newMeta = Object.assign({}, meta, {
+      status:'chain', chainOrder, N: chainOrder.length, phaseIndex:0,
+      currentModeId:'chain',
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: meta.roundDurationSec || 60
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    view='game';
+    ui.chainSubmitted=false;
+    render();
+  }
+
+  // ---------- actions: Stage Draw (pictionary) ----------
+  async function beginPictionaryMode(){
+    const drawer = ui.players[Math.floor(Math.random()*ui.players.length)];
+    const roundId = 'pd' + (meta.pictRoundCount||0);
+    const words = pickPictionaryWords(3, meta.pictUsedWords||[]);
+    const newMeta = Object.assign({}, meta, {
+      status:'pict_choose',
+      currentModeId:'pictionary',
+      pictRoundId: roundId,
+      pictRoundCount: (meta.pictRoundCount||0)+1,
+      pictDrawerId: drawer.id,
+      pictDrawerName: drawer.name,
+      pictWordChoices: words,
+      pictChosenWord: null,
+      N: ui.players.length,
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: 15 // short window to pick a word
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    view='game';
+    ui.pictGuessInput=''; ui.pictGuessedCorrectly=false; ui.pictFeed=[]; ui.pictResults=null; ui.pictStageImg='';
+    render();
+  }
+
+  async function chooseWord(word){
+    const newMeta = Object.assign({}, meta, {
+      status:'pict_draw',
+      pictChosenWord: word,
+      pictUsedWords: (meta.pictUsedWords||[]).concat([word]),
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: meta.roundDurationSec || 60
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    render();
+  }
+  async function autoChooseWordIfNeeded(){
+    // if the drawer never picks in time, pick for them so the game doesn't stall
+    if(!meta.pictWordChoices || !meta.pictWordChoices.length) return;
+    const word = meta.pictWordChoices[Math.floor(Math.random()*meta.pictWordChoices.length)];
+    await chooseWord(word);
+  }
+
+  async function pushStageSnapshot(){
+    const canvas = document.getElementById('drawBoard');
+    if(!canvas || !meta || meta.status!=='pict_draw') return;
+    try{
+      // Downscale + JPEG before encoding — the live preview doesn't need
+      // full resolution, and a small, fast-to-compress payload is what
+      // makes rapid-fire updates over polling actually practical.
+      const maxW = 360;
+      const scale = Math.min(1, maxW / canvas.width);
+      const small = document.createElement('canvas');
+      small.width = Math.round(canvas.width * scale);
+      small.height = Math.round(canvas.height * scale);
+      const sctx = small.getContext('2d');
+      sctx.fillStyle = '#fff'; sctx.fillRect(0,0,small.width,small.height); // JPEG has no alpha channel
+      sctx.drawImage(canvas, 0, 0, small.width, small.height);
+      const dataUrl = small.toDataURL('image/jpeg', 0.55);
+      await sSet(`lobby:${lobbyCode}:pictcanvas:${meta.pictRoundId}`, { img: dataUrl });
+    }catch(e){}
+  }
+  // Self-scheduling instead of a fixed setInterval: each push waits for the
+  // last one to fully finish before starting the next, so on a fast
+  // connection it fires back-to-back as quickly as the network allows,
+  // and on a slow connection it never piles up overlapping requests.
+  let pictSnapshotTimeoutId = null;
+  function stopStageSnapshotLoop(){ if(pictSnapshotTimeoutId){ clearTimeout(pictSnapshotTimeoutId); pictSnapshotTimeoutId=null; } }
+  function startStageSnapshotLoop(){
+    stopStageSnapshotLoop();
+    const tick = async ()=>{
+      if(!meta || meta.status!=='pict_draw') return; // round ended — stop naturally
+      await pushStageSnapshot();
+      pictSnapshotTimeoutId = setTimeout(tick, 80);
+    };
+    tick();
+  }
+
+  async function refreshStageImage(){
+    const rec = await sGet(`lobby:${lobbyCode}:pictcanvas:${meta.pictRoundId}`);
+    const img = document.getElementById('stageCanvasImg');
+    if(rec && rec.img && img && img.src !== rec.img) img.src = rec.img;
+  }
+  let stageViewTimeoutId = null;
+  function stopStageViewLoop(){ if(stageViewTimeoutId){ clearTimeout(stageViewTimeoutId); stageViewTimeoutId=null; } }
+  function startStageViewLoop(){
+    stopStageViewLoop();
+    const tick = async ()=>{
+      if(!meta || meta.status!=='pict_draw') return;
+      await refreshStageImage();
+      stageViewTimeoutId = setTimeout(tick, 80);
+    };
+    tick();
+  }
+
+  async function submitPictGuess(){
+    const text = ui.pictGuessInput.trim();
+    if(!text || ui.pictGuessedCorrectly) return;
+    const correct = text.toLowerCase() === String(meta.pictChosenWord||'').toLowerCase();
+    await sSet(`lobby:${lobbyCode}:pictguess:${meta.pictRoundId}:${myId}`, {
+      name: myName, text, correct, guessedAt: Date.now()
+    });
+    if(correct) ui.pictGuessedCorrectly = true;
+    ui.pictGuessInput = '';
+    const input = document.getElementById('pictGuessInput');
+    if(input) input.value = '';
+    render();
+  }
+
+  async function refreshPictFeed(){
+    const keys = await sListKeys(`lobby:${lobbyCode}:pictguess:${meta.pictRoundId}:`);
+    const entries = await Promise.all(keys.map(k=>sGet(k)));
+    ui.pictFeed = entries.filter(Boolean).sort((a,b)=>a.guessedAt-b.guessedAt);
+    const feedEl = document.getElementById('pictFeed');
+    if(feedEl) feedEl.innerHTML = pictFeedRowsHtml();
+  }
+  function pictFeedRowsHtml(){
+    return ui.pictFeed.map(g=>{
+      if(g.correct) return `<div class="pict-feed-row correct">✅ ${escapeHtml(g.name)} guessed it!</div>`;
+      return `<div class="pict-feed-row">${escapeHtml(g.name)}: ${escapeHtml(g.text)}</div>`;
+    }).join('');
+  }
+
+  async function computePictResultsSummary(){
+    const keys = await sListKeys(`lobby:${lobbyCode}:pictguess:${meta.pictRoundId}:`);
+    const entries = (await Promise.all(keys.map(async (k)=>{
+      const v = await sGet(k);
+      return v ? Object.assign({pid: k.split(':').pop()}, v) : null;
+    }))).filter(Boolean);
+    const correctGuessers = entries.filter(e=>e.correct).sort((a,b)=>a.guessedAt-b.guessedAt);
+    const totalGuessers = (meta.N||1) - 1; // everyone except the drawer
+    const everyoneGotIt = totalGuessers>0 && correctGuessers.length>=totalGuessers;
+    return {
+      correctGuessers,
+      everyoneGotIt,
+      display: {
+        word: meta.pictChosenWord,
+        drawerName: meta.pictDrawerName,
+        scored: correctGuessers.map((g,i)=>({name:g.name, points: i===0?2:1})),
+        everyoneGotIt
+      }
+    };
+  }
+  async function endPictRound(){
+    const summary = await computePictResultsSummary();
+    // score: first correct guesser +2, everyone else who also got it +1 each
+    for(let i=0;i<summary.correctGuessers.length;i++){
+      const pts = i===0 ? 2 : 1;
+      await addScore(summary.correctGuessers[i].pid, summary.correctGuessers[i].name, pts);
+    }
+    if(summary.everyoneGotIt){
+      await addScore(meta.pictDrawerId, meta.pictDrawerName, 3);
+    }
+    ui.pictResults = summary.display;
+    const newMeta = Object.assign({}, meta, {status:'pict_results'});
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    render();
+  }
+  async function addScore(pid, name, points){
+    if(!pid) return;
+    const key = `lobby:${lobbyCode}:score:${pid}`;
+    const current = await sGet(key);
+    const newScore = (current && typeof current.wins==='number' ? current.wins : 0) + points;
+    await sSet(key, { name, wins: newScore });
+  }
+
+
+  // ---------- actions: chain round ----------
+  async function submitChainText(task){
+    const val = document.getElementById('chainTextInput').value.trim();
+    if(!val) return;
+    await sSet(chainKey(meta.phaseIndex, task.ownerId), {type:'text', content:val, byPlayerId:myId, byName:myName});
+    ui.chainSubmitted=true; render();
+  }
+  async function submitChainDrawing(task){
+    const canvas = document.getElementById('drawBoard');
+    const dataUrl = canvas.toDataURL('image/png');
+    await sSet(chainKey(meta.phaseIndex, task.ownerId), {type:'drawing', content:dataUrl, byPlayerId:myId, byName:myName});
+    ui.chainSubmitted=true; render();
+  }
+  async function submitChainGuess(task){
+    const val = document.getElementById('chainGuessInput').value.trim();
+    if(!val) return;
+    await sSet(chainKey(meta.phaseIndex, task.ownerId), {type:'text', content:val, byPlayerId:myId, byName:myName});
+    ui.chainSubmitted=true; render();
+  }
+  async function hostForceAdvanceChain(){ await advanceChainPhase(); }
+
+  async function advanceChainPhase(){
+    const nextPhase = meta.phaseIndex+1;
+    let newMeta;
+    if(nextPhase>=meta.N){
+      newMeta = Object.assign({}, meta, {status:'chain_reveal'});
+    } else {
+      newMeta = Object.assign({}, meta, {
+        phaseIndex: nextPhase,
+        phaseStartedAt: Date.now(),
+        phaseDurationSec: meta.roundDurationSec || 60
+      });
+    }
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    ui.chainSubmitted=false;
+    if(meta.status==='chain_reveal') await loadReveal();
+    render();
+  }
+
+  async function loadReveal(){
+    const chains = [];
+    for(const ownerId of meta.chainOrder){
+      const steps = [];
+      for(let phase=0; phase<meta.N; phase++){
+        const step = await sGet(chainKey(phase, ownerId));
+        if(step) steps.push(step);
+      }
+      const ownerName = ui.players.find(p=>p.id===ownerId)?.name || '???';
+      chains.push({ownerId, ownerName, steps});
+    }
+    ui.revealChains = chains; ui.revealOwnerIdx=0; ui.revealStepIdx=0;
+  }
+
+  // ---------- actions: chain vote ----------
+  async function startChainVote(){
+    const newMeta = Object.assign({}, meta, {
+      status:'chain_vote',
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: meta.roundDurationSec || 60
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    ui.chainVoteSelected = null; ui.chainVoteSubmitted = false;
+    render();
+  }
+  async function submitChainVote(){
+    if(!ui.chainVoteSelected) return;
+    await sSet(`lobby:${lobbyCode}:chainvote:${meta.modeVoteId}:${myId}`, { votedFor: ui.chainVoteSelected });
+    ui.chainVoteSubmitted = true; render();
+  }
+  async function computeChainVoteTally(){
+    const voteKeys = await sListKeys(`lobby:${lobbyCode}:chainvote:${meta.modeVoteId}:`);
+    const votes = await Promise.all(voteKeys.map(k=>sGet(k)));
+    const counts = {};
+    meta.chainOrder.forEach(pid=>counts[pid]=0);
+    votes.forEach(v=>{ if(v && counts[v.votedFor]!==undefined) counts[v.votedFor]++; });
+    return meta.chainOrder.map(pid=>{
+      const owner = ui.revealChains.find(c=>c.ownerId===pid);
+      return { pid, name: owner ? owner.ownerName : '???', votes: counts[pid]||0 };
+    }).sort((a,b)=>b.votes-a.votes);
+  }
+  async function showChainVoteResults(){
+    const tally = await computeChainVoteTally();
+    ui.chainVoteTally = tally;
+    await awardRoundWinners(tally);
+    const newMeta = Object.assign({}, meta, {status:'chain_vote_results'});
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    render();
+  }
+
+  // ---------- actions: sound round ----------
+  async function beginSoundMode(){
+    const usedPresets = meta.soundRounds.map(r=>r.preset);
+    let available = allSoundIds().filter(id=>!usedPresets.includes(id));
+    if(available.length===0) available = allSoundIds();
+    const preset = available[Math.floor(Math.random()*available.length)];
+    const roundId = 's' + meta.soundRoundCount;
+    const newMeta = Object.assign({}, meta, {
+      status:'sound_record', soundPreset:preset, soundRoundId:roundId,
+      soundRoundCount: meta.soundRoundCount+1,
+      soundRounds: meta.soundRounds.concat([{id:roundId, preset}]),
+      currentModeId:'sound',
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: meta.roundDurationSec || 60
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    view='game';
+    ui.soundSubmitted=false; ui.recordedBlob=null; ui.recordedUrl=null; ui.micDenied=false;
+    resetWaveforms();
+    render();
+  }
+
+  // ---------- actions: Impression Stage (5 prompts per selection) ----------
+  function pickImpressionPrompt(used){
+    const avail = IMPRESSION_PROMPTS.filter(p=>!(used||[]).includes(p));
+    const pool = avail.length ? avail : IMPRESSION_PROMPTS;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  async function beginImpressionMode(){
+    await beginImpressionRound(1, []);
+  }
+
+  async function beginImpressionRound(roundNum, usedPrompts){
+    const prompt = pickImpressionPrompt(usedPrompts);
+    const roundId = 'ir' + Date.now().toString(36) + roundNum;
+    const newMeta = Object.assign({}, meta, {
+      status:'impression_record',
+      currentModeId:'impression',
+      imprRoundNum: roundNum,
+      imprPromptsUsed: (usedPrompts||[]).concat([prompt]),
+      imprPrompt: prompt,
+      imprRoundId: roundId,
+      imprOrder: null,
+      imprPlaybackIndex: 0,
+      imprTotalScored: meta.imprTotalScored || {}, // running tally across all 5 prompts this mode session
+      N: ui.players.length,
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: meta.roundDurationSec || 60
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    view='game';
+    ui.imprSubmitted=false; ui.imprRecordedBlob=null; ui.imprRecordedUrl=null; ui.imprMicDenied=false;
+    render();
+  }
+
+  async function toggleImpressionRecording(){
+    if(ui.recording){
+      if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
+      ui.recording=false; render();
+      return;
+    }
+    try{
+      mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      if(ctx().state==='suspended'){ try{ await ctx().resume(); }catch(e){} }
+      mediaChunks=[];
+      mediaRecorder = new MediaRecorder(mediaStream);
+      mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) mediaChunks.push(e.data); };
+      mediaRecorder.onstop = ()=>{
+        const blob = new Blob(mediaChunks, {type: mediaChunks[0]?.type || 'audio/webm'});
+        ui.imprRecordedBlob = blob;
+        ui.imprRecordedUrl = URL.createObjectURL(blob);
+        if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+        render();
+      };
+      mediaRecorder.start();
+      ui.recording=true;
+      render();
+      setTimeout(()=>{ if(ui.recording && mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); ui.recording=false; } }, 8000);
+    }catch(e){
+      ui.imprMicDenied = true; render();
+    }
+  }
+
+  async function submitImpression(){
+    if(!ui.imprRecordedBlob) return;
+    const b64 = await blobToBase64(ui.imprRecordedBlob);
+    await sSet(`lobby:${lobbyCode}:imprsound:${meta.imprRoundId}:${myId}`, { name:myName, audio:b64 });
+    ui.imprSubmitted = true; render();
+  }
+
+  async function startImpressionPlayback(){
+    const keys = await sListKeys(`lobby:${lobbyCode}:imprsound:${meta.imprRoundId}:`);
+    const order = keys.map(k=>k.split(':').pop()).sort(()=>Math.random()-0.5);
+    const newMeta = Object.assign({}, meta, { status:'impression_playback', imprOrder: order, imprPlaybackIndex: 0 });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    imprLastPlayedIndex = -1;
+    render();
+  }
+
+  // Guards against restarting the same clip or double-firing 'ended' when
+  // wireEvents runs again for a status that hasn't actually changed index.
+  let imprLastPlayedIndex = -1;
+  async function playCurrentImpressionClip(){
+    const idx = meta.imprPlaybackIndex || 0;
+    if(idx === imprLastPlayedIndex) return;
+    imprLastPlayedIndex = idx;
+    const order = meta.imprOrder || [];
+    const pid = order[idx];
+    if(!pid) return;
+    const rec = await sGet(`lobby:${lobbyCode}:imprsound:${meta.imprRoundId}:${pid}`);
+    const audioEl = document.getElementById('imprPlaybackAudio');
+    if(!rec || !rec.audio || !audioEl) return;
+    audioEl.src = rec.audio;
+    audioEl.onended = () => { advanceImpressionPlayback(); };
+    audioEl.play().catch(()=>{
+      // if autoplay gets blocked, don't let the whole game stall — move on
+      // after a short wait instead of waiting forever for a click
+      setTimeout(()=>{ if(imprLastPlayedIndex===idx) advanceImpressionPlayback(); }, 4000);
+    });
+  }
+
+  async function advanceImpressionPlayback(){
+    const nextIdx = (meta.imprPlaybackIndex||0) + 1;
+    let newMeta;
+    if(!meta.imprOrder || nextIdx >= meta.imprOrder.length){
+      newMeta = Object.assign({}, meta, { status:'impression_vote', phaseStartedAt: Date.now(), phaseDurationSec: meta.roundDurationSec || 60 });
+    } else {
+      newMeta = Object.assign({}, meta, { imprPlaybackIndex: nextIdx });
+    }
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    ui.imprVoteSelected=null; ui.imprVoteSubmitted=false;
+    render();
+  }
+
+  async function submitImpressionVote(){
+    if(!ui.imprVoteSelected) return;
+    await sSet(`lobby:${lobbyCode}:imprvote:${meta.imprRoundId}:${myId}`, { votedFor: ui.imprVoteSelected });
+    ui.imprVoteSubmitted = true; render();
+  }
+
+  async function computeImpressionTally(){
+    const order = meta.imprOrder || [];
+    const voteKeys = await sListKeys(`lobby:${lobbyCode}:imprvote:${meta.imprRoundId}:`);
+    const votes = await Promise.all(voteKeys.map(k=>sGet(k)));
+    const counts = {};
+    order.forEach(pid=>counts[pid]=0);
+    votes.forEach(v=>{ if(v && counts[v.votedFor]!==undefined) counts[v.votedFor]++; });
+    return order.map(pid=>{
+      const p = ui.players.find(pl=>pl.id===pid);
+      return { pid, name: p ? p.name : '???', votes: counts[pid]||0 };
+    }).sort((a,b)=>b.votes-a.votes);
+  }
+
+  async function finishImpressionRound(){
+    const tally = await computeImpressionTally();
+    ui.imprRoundTally = tally;
+    await awardRoundWinners(tally);
+    const newMeta = Object.assign({}, meta, { status:'impression_round_results' });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    render();
+  }
+
+  async function continueImpressionOrFinish(){
+    if((meta.imprRoundNum||1) < 5){
+      await beginImpressionRound((meta.imprRoundNum||1)+1, meta.imprPromptsUsed||[]);
+    } else {
+      await startModeVote();
+    }
+  }
+
+  // ---------- waveform drawing (target sound vs. your own voice) ----------
+  // These store the *entire history* of peak loudness over each clip's
+  // duration (like a real audio-editor waveform), not just the current
+  // instant — so the picture stays put after the sound finishes instead of
+  // settling back to a flat line once the audio goes quiet.
+  let targetEnvelope=[], liveEnvelope=[];
+  let targetWaveAnimId=null, liveWaveAnimId=null;
+  let _nextSoundDurationMs = 1700; // procedural presets use this default; file presets override it once decoded
+
+  function sizeWaveCanvas(){
+    const c = document.getElementById('waveCanvas');
+    if(!c) return null;
+    if(c.width !== c.clientWidth*2 || c.height !== c.clientHeight*2){
+      c.width = c.clientWidth*2; c.height = c.clientHeight*2;
+    }
+    return c;
+  }
+  function resampleEnvelope(arr, n){
+    if(!arr || !arr.length) return null;
+    const out = new Array(n);
+    for(let i=0;i<n;i++){
+      out[i] = arr[Math.min(arr.length-1, Math.floor(i*arr.length/n))];
+    }
+    return out;
+  }
+  function drawEnvelopeBars(ctx2d, w, h, envelope, color, alpha){
+    if(!envelope) return;
+    const barCount = envelope.length;
+    const gap = w / barCount;
+    const barWidth = gap * 0.55;
+    ctx2d.globalAlpha = alpha;
+    ctx2d.fillStyle = color;
+    for(let i=0;i<barCount;i++){
+      const barHeight = Math.max(h*0.035, envelope[i] * h*0.92);
+      const x = i*gap + (gap-barWidth)/2;
+      const y = (h-barHeight)/2;
+      ctx2d.fillRect(x, y, barWidth, barHeight);
+    }
+    ctx2d.globalAlpha = 1;
+  }
+  function renderWaveCanvas(){
+    const c = sizeWaveCanvas();
+    if(!c) return;
+    const g = c.getContext('2d');
+    g.clearRect(0,0,c.width,c.height);
+    const BARS = 40;
+    // faint baseline bars so the panel doesn't look empty before anything plays
+    drawEnvelopeBars(g, c.width, c.height, new Array(BARS).fill(0), '#3a2e63', 1);
+    drawEnvelopeBars(g, c.width, c.height, resampleEnvelope(targetEnvelope, BARS), '#8C7BFF', 0.9);
+    drawEnvelopeBars(g, c.width, c.height, resampleEnvelope(liveEnvelope, BARS), '#FF5E5B', 0.8);
+  }
+  function resetWaveforms(){
+    targetEnvelope=[]; liveEnvelope=[];
+    if(targetWaveAnimId) cancelAnimationFrame(targetWaveAnimId);
+    if(liveWaveAnimId) cancelAnimationFrame(liveWaveAnimId);
+    targetWaveAnimId=null; liveWaveAnimId=null;
+  }
+  function peakOf(byteData){
+    let maxDev = 0;
+    for(let i=0;i<byteData.length;i++){
+      const dev = Math.abs(byteData[i]/128 - 1);
+      if(dev>maxDev) maxDev = dev;
+    }
+    return maxDev;
+  }
+  async function playTargetSound(def){
+    if(ctx().state==='suspended'){ try{ await ctx().resume(); }catch(e){} }
+    _nextSoundDurationMs = 1700; // reset to the procedural default; file sounds override this inside their own play()
+    try{ await def.play(); }catch(e){ return; }
+    if(targetWaveAnimId) cancelAnimationFrame(targetWaveAnimId);
+    targetEnvelope = [];
+    const analyser = targetAnalyser();
+    const data = new Uint8Array(analyser.fftSize);
+    const start = performance.now();
+    const durationMs = _nextSoundDurationMs;
+    function tick(){
+      analyser.getByteTimeDomainData(data);
+      targetEnvelope.push(peakOf(data));
+      renderWaveCanvas();
+      if(performance.now()-start < durationMs){ targetWaveAnimId = requestAnimationFrame(tick); }
+    }
+    tick();
+  }
+
+  async function toggleRecording(){
+    if(ui.recording){
+      if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
+      ui.recording=false; render();
+      return;
+    }
+    try{
+      mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      if(ctx().state==='suspended'){ try{ await ctx().resume(); }catch(e){} }
+      mediaChunks=[];
+      mediaRecorder = new MediaRecorder(mediaStream);
+      mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) mediaChunks.push(e.data); };
+      mediaRecorder.onstop = ()=>{
+        const blob = new Blob(mediaChunks, {type: mediaChunks[0]?.type || 'audio/webm'});
+        ui.recordedBlob = blob;
+        ui.recordedUrl = URL.createObjectURL(blob);
+        if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+        if(liveWaveAnimId){ cancelAnimationFrame(liveWaveAnimId); liveWaveAnimId=null; }
+        render();
+      };
+      mediaRecorder.start();
+      ui.recording=true;
+      liveEnvelope = [];
+      render();
+
+      // draw the live mic waveform (analysis only — never routed to speakers,
+      // or the player would hear their own voice echoed back)
+      const micAnalyser = ctx().createAnalyser();
+      micAnalyser.fftSize = 512;
+      ctx().createMediaStreamSource(mediaStream).connect(micAnalyser);
+      const micData = new Uint8Array(micAnalyser.fftSize);
+      function micTick(){
+        if(!ui.recording) return;
+        micAnalyser.getByteTimeDomainData(micData);
+        liveEnvelope.push(peakOf(micData));
+        renderWaveCanvas();
+        liveWaveAnimId = requestAnimationFrame(micTick);
+      }
+      micTick();
+
+      setTimeout(()=>{ if(ui.recording && mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); ui.recording=false; } }, 6000);
+    }catch(e){
+      ui.micDenied=true; render();
+    }
+  }
+
+  function blobToBase64(blob){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function submitSound(){
+    if(!ui.recordedBlob) return;
+    const b64 = await blobToBase64(ui.recordedBlob);
+    await sSet(soundKey(meta.soundRoundId, myId), {name:myName, type:'audio', audio:b64});
+    ui.soundSubmitted=true; render();
+  }
+  async function hostForceStartVote(){
+    const newMeta = Object.assign({}, meta, {
+      status:'sound_vote',
+      phaseStartedAt: Date.now(),
+      phaseDurationSec: meta.roundDurationSec || 60
+    });
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    ui.voteSubmitted=false; ui.voteSelected=null;
+    render();
+  }
+
+  async function submitVote(){
+    if(!ui.voteSelected) return;
+    await sSet(voteKey(meta.soundRoundId, myId), {votedFor: ui.voteSelected});
+    ui.voteSubmitted=true; render();
+  }
+  async function hostForceShowResults(){
+    const tally = await computeRoundTally(meta.soundRoundId);
+    ui.roundTally = tally;
+    await awardRoundWinners(tally);
+    const newMeta = Object.assign({}, meta, {status:'sound_results'});
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    render();
+  }
+
+  async function computeRoundTally(roundId){
+    const entryKeys = await sListKeys(`lobby:${lobbyCode}:sound:${roundId}:`);
+    const entries = await Promise.all(entryKeys.map(async k=>{
+      const pid = k.split(':').pop();
+      const v = await sGet(k);
+      return {pid, name: v ? v.name : '???'};
+    }));
+    const voteKeys = await sListKeys(`lobby:${lobbyCode}:vote:${roundId}:`);
+    const votes = await Promise.all(voteKeys.map(k=>sGet(k)));
+    const counts = {};
+    entries.forEach(e=>counts[e.pid]=0);
+    votes.forEach(v=>{ if(v && counts[v.votedFor]!==undefined) counts[v.votedFor]++; });
+    return entries.map(e=>({pid:e.pid, name:e.name, votes:counts[e.pid]||0})).sort((a,b)=>b.votes-a.votes);
+  }
+
+  async function awardRoundWinners(tally){
+    if(!tally.length) return;
+    const maxVotes = Math.max(...tally.map(r=>r.votes));
+    if(maxVotes<=0) return; // nobody got any votes — no winner to award
+    const winners = tally.filter(r=>r.votes===maxVotes);
+    for(const w of winners){
+      const key = `lobby:${lobbyCode}:score:${w.pid}`;
+      const current = await sGet(key);
+      const newScore = (current && typeof current.wins==='number' ? current.wins : 0) + 1;
+      await sSet(key, { name: w.name, wins: newScore });
+    }
+  }
+
+  async function computeFinalTally(){
+    // final standings are based on rounds WON (from the persistent score
+    // store awardRoundWinners/addScore write to), not raw vote totals —
+    // include everyone who's ever joined, even if they haven't won a round.
+    // Any client can compute this independently from shared storage — it
+    // must NOT only live in the host's local memory, or nobody else ever
+    // sees real standings once the status flips to 'final'.
+    const allPlayers = ui.players && ui.players.length ? ui.players : await fetchPlayers();
+    const scoreKeys = await sListKeys(`lobby:${lobbyCode}:score:`);
+    const scores = await Promise.all(scoreKeys.map(k=>sGet(k)));
+    const winsByPid = {};
+    scoreKeys.forEach((k,i)=>{
+      const pid = k.split(':').pop();
+      winsByPid[pid] = scores[i] && typeof scores[i].wins==='number' ? scores[i].wins : 0;
+    });
+    return allPlayers
+      .map(p=>({ pid:p.id, name:p.name, character:p.character, wins: winsByPid[p.id]||0 }))
+      .sort((a,b)=>b.wins-a.wins);
+  }
+
+  async function finishGame(){
+    ui.finalTally = await computeFinalTally();
+    const newMeta = Object.assign({}, meta, {status:'final'});
+    await sSet(metaKey(), newMeta);
+    meta = newMeta;
+    render();
+  }
+
+  // ---------- polling / sync ----------
+  let lastStatusSeen = null;
+  async function refreshAndRender(){
+    if(!lobbyCode) return;
+    const freshMeta = await sGet(metaKey());
+    if(!freshMeta){ return; }
+    const statusChanged = !meta || meta.status!==freshMeta.status || meta.phaseIndex!==freshMeta.phaseIndex || meta.soundRoundId!==freshMeta.soundRoundId || meta.modeVoteId!==freshMeta.modeVoteId || meta.imprPlaybackIndex!==freshMeta.imprPlaybackIndex || meta.imprRoundId!==freshMeta.imprRoundId;
+    meta = freshMeta;
+
+    if(meta.status==='lobby'){
+      ui.players = await fetchPlayers();
+      render();
+      return;
+    }
+
+    if(view==='lobby' && meta.status!=='lobby'){
+      // host has started the game
+      view='game';
+      ui.players = await fetchPlayers();
+    }
+
+    if(meta.status==='mode_vote'){
+      if(statusChanged){ ui.modeVoteSelected=null; ui.modeVoteSubmitted=false; }
+      const mine = await sGet(`lobby:${lobbyCode}:modevote:${meta.modeVoteId}:${myId}`);
+      const submittedByMe = !!mine;
+      const submissionChanged = submittedByMe !== ui.modeVoteSubmitted;
+      ui.modeVoteSubmitted = submittedByMe;
+      const total = meta.N || (ui.players ? ui.players.length : 0);
+      const voteKeys = await sListKeys(`lobby:${lobbyCode}:modevote:${meta.modeVoteId}:`);
+      ui.modeVoteProgress = {count: voteKeys.length, total};
+      // Any connected client can trigger this once the deadline passes — not
+      // just the host — so the game doesn't stall if the host's device sleeps
+      // or their tab gets backgrounded (very common mid-party).
+      if((isHost && voteKeys.length>=total) || isPastDeadline(VOTE_GRACE_SEC)){
+        await finalizeModeVote();
+        return;
+      }
+      if(statusChanged || submissionChanged || ui.modeVoteSubmitted){
+        render();
+      }
+      return;
+    }
+
+    if(meta.status==='chain'){
+      if(statusChanged){ ui.chainSubmitted=false; ui.chainTaskCache=null; }
+      const task = myChainTask();
+      const mine = await sGet(chainKey(meta.phaseIndex, task.ownerId));
+      // only count as "submitted" for me if the entry was written by me this phase
+      const submittedByMe = !!(mine && mine.byPlayerId===myId);
+      const submissionChanged = submittedByMe !== ui.chainSubmitted;
+      ui.chainSubmitted = submittedByMe;
+      if(task.kind!=='write' && !ui.chainTaskCache){
+        ui.chainTaskCache = await sGet(chainKey(meta.phaseIndex-1, task.ownerId));
+      }
+      const progressKeys = await sListKeys(`lobby:${lobbyCode}:chain:${meta.phaseIndex}:`);
+      ui.chainProgress = {count: progressKeys.length, total: meta.N};
+      if((isHost && progressKeys.length>=meta.N) || isPastDeadline()){
+        await advanceChainPhase();
+        return;
+      }
+      // Only rebuild the DOM when something actually changed, or while waiting
+      // (post-submit) so the progress bar updates. Never rebuild mid-task, or
+      // an in-progress drawing on the canvas would get wiped by the redraw.
+      if(statusChanged || submissionChanged || ui.chainSubmitted){
+        render();
+      }
+      return;
+    }
+
+    if(meta.status==='chain_reveal'){
+      if(statusChanged || ui.revealChains.length===0) await loadReveal();
+      render();
+      return;
+    }
+
+    if(meta.status==='chain_vote'){
+      if(statusChanged){ ui.chainVoteSelected=null; ui.chainVoteSubmitted=false; }
+      if(ui.revealChains.length===0) await loadReveal(); // needed for the vote previews if we arrived here fresh
+      const mine = await sGet(`lobby:${lobbyCode}:chainvote:${meta.modeVoteId}:${myId}`);
+      const submittedByMe = !!mine;
+      const submissionChanged = submittedByMe !== ui.chainVoteSubmitted;
+      ui.chainVoteSubmitted = submittedByMe;
+      const voteKeys = await sListKeys(`lobby:${lobbyCode}:chainvote:${meta.modeVoteId}:`);
+      ui.chainVoteProgress = {count: voteKeys.length, total: meta.N};
+      if((isHost && voteKeys.length>=meta.N) || isPastDeadline(VOTE_GRACE_SEC)){
+        await showChainVoteResults();
+        return;
+      }
+      if(statusChanged || submissionChanged || ui.chainVoteSubmitted){
+        render();
+      }
+      return;
+    }
+
+    if(meta.status==='chain_vote_results'){
+      if(ui.revealChains.length===0) await loadReveal();
+      if(statusChanged || ui.chainVoteTally.length===0) ui.chainVoteTally = await computeChainVoteTally();
+      render();
+      return;
+    }
+
+    if(meta.status==='pict_choose'){
+      if(statusChanged){ ui.pictGuessInput=''; ui.pictGuessedCorrectly=false; ui.pictFeed=[]; ui.pictResults=null; ui.pictStageImg=''; }
+      if(isPastDeadline(VOTE_GRACE_SEC) && meta.status==='pict_choose'){
+        await autoChooseWordIfNeeded();
+        return;
+      }
+      if(statusChanged){ render(); }
+      return;
+    }
+
+    if(meta.status==='pict_draw'){
+      const isDrawer = myId === meta.pictDrawerId;
+      if(statusChanged){ ui.pictGuessInput=''; ui.pictGuessedCorrectly=false; ui.pictFeed=[]; }
+      if(!isDrawer){
+        // targeted updates only — never a full render() here, or the guess
+        // input and the live drawing/feed would keep getting yanked out
+        // from under the player while they're mid-guess
+        await refreshStageImage();
+        await refreshPictFeed();
+        const mine = await sGet(`lobby:${lobbyCode}:pictguess:${meta.pictRoundId}:${myId}`);
+        if(mine && mine.correct) ui.pictGuessedCorrectly = true;
+      }
+      const guessKeys = await sListKeys(`lobby:${lobbyCode}:pictguess:${meta.pictRoundId}:`);
+      const guessRecords = await Promise.all(guessKeys.map(k=>sGet(k)));
+      const correctCount = guessRecords.filter(g=>g && g.correct).length;
+      const totalGuessers = (meta.N||1) - 1;
+      if((totalGuessers>0 && correctCount>=totalGuessers) || isPastDeadline()){
+        await endPictRound();
+        return;
+      }
+      if(statusChanged){ render(); }
+      return;
+    }
+
+    if(meta.status==='pict_results'){
+      if(statusChanged || !ui.pictResults) ui.pictResults = (await computePictResultsSummary()).display;
+      render();
+      return;
+    }
+
+    if(meta.status==='impression_record'){
+      if(statusChanged){ ui.imprSubmitted=false; ui.imprRecordedBlob=null; ui.imprRecordedUrl=null; ui.imprMicDenied=false; }
+      const mine = await sGet(`lobby:${lobbyCode}:imprsound:${meta.imprRoundId}:${myId}`);
+      const submittedByMe = !!mine;
+      const submissionChanged = submittedByMe !== ui.imprSubmitted;
+      ui.imprSubmitted = submittedByMe;
+      const keys = await sListKeys(`lobby:${lobbyCode}:imprsound:${meta.imprRoundId}:`);
+      ui.imprProgress = { count: keys.length, total: meta.N };
+      if((isHost && keys.length>=meta.N) || isPastDeadline()){
+        await startImpressionPlayback();
+        return;
+      }
+      if(statusChanged || submissionChanged || ui.imprSubmitted){ render(); }
+      return;
+    }
+
+    if(meta.status==='impression_playback'){
+      if(statusChanged){
+        imprLastPlayedIndex = -1; // -1 never matches a real index, so this always lets the current clip play
+        render();
+      }
+      return;
+    }
+
+    if(meta.status==='impression_vote'){
+      if(statusChanged){ ui.imprVoteSelected=null; ui.imprVoteSubmitted=false; }
+      const mine = await sGet(`lobby:${lobbyCode}:imprvote:${meta.imprRoundId}:${myId}`);
+      const submittedByMe = !!mine;
+      const submissionChanged = submittedByMe !== ui.imprVoteSubmitted;
+      ui.imprVoteSubmitted = submittedByMe;
+      const voteKeys = await sListKeys(`lobby:${lobbyCode}:imprvote:${meta.imprRoundId}:`);
+      ui.imprVoteProgress = { count: voteKeys.length, total: meta.N };
+      if((isHost && voteKeys.length>=meta.N) || isPastDeadline(VOTE_GRACE_SEC)){
+        await finishImpressionRound();
+        return;
+      }
+      if(statusChanged || submissionChanged || ui.imprVoteSubmitted){ render(); }
+      return;
+    }
+
+    if(meta.status==='impression_round_results'){
+      if(statusChanged || ui.imprRoundTally.length===0) ui.imprRoundTally = await computeImpressionTally();
+      render();
+      return;
+    }
+
+    if(meta.status==='sound_record'){
+      if(statusChanged){ ui.soundSubmitted=false; ui.recordedBlob=null; ui.recordedUrl=null; ui.micDenied=false; }
+      const mine = await sGet(soundKey(meta.soundRoundId, myId));
+      const submittedByMe = !!mine;
+      const submissionChanged = submittedByMe !== ui.soundSubmitted;
+      ui.soundSubmitted = submittedByMe;
+      const keys = await sListKeys(`lobby:${lobbyCode}:sound:${meta.soundRoundId}:`);
+      ui.soundProgress = {count: keys.length, total: meta.N};
+      if(isPastDeadline()){
+        await hostForceStartVote();
+        return;
+      }
+      // Skip rebuilding the DOM while someone is mid-recording or typing a
+      // fallback answer — a redraw here would drop their in-progress take.
+      if(statusChanged || submissionChanged || ui.soundSubmitted){
+        render();
+      }
+      return;
+    }
+
+    if(meta.status==='sound_vote'){
+      let entriesLoaded = false;
+      if(statusChanged || ui.voteEntries.length===0){
+        const keys = await sListKeys(`lobby:${lobbyCode}:sound:${meta.soundRoundId}:`);
+        const entries = await Promise.all(keys.map(async k=>{
+          const pid = k.split(':').pop();
+          const v = await sGet(k);
+          return v ? Object.assign({pid}, v) : null;
+        }));
+        ui.voteEntries = entries.filter(Boolean);
+        ui.voteSelected=null; ui.voteSubmitted=false;
+        entriesLoaded = true;
+      }
+      const mine = await sGet(voteKey(meta.soundRoundId, myId));
+      const submittedByMe = !!mine;
+      const submissionChanged = submittedByMe !== ui.voteSubmitted;
+      ui.voteSubmitted = submittedByMe;
+      const voteKeys = await sListKeys(`lobby:${lobbyCode}:vote:${meta.soundRoundId}:`);
+      ui.voteProgress = {count: voteKeys.length, total: meta.N};
+      if((isHost && voteKeys.length>=meta.N) || isPastDeadline(VOTE_GRACE_SEC)){
+        ui.roundTally = await computeRoundTally(meta.soundRoundId);
+        await awardRoundWinners(ui.roundTally);
+        const newMeta = Object.assign({}, meta, {status:'sound_results'});
+        await sSet(metaKey(), newMeta);
+        meta = newMeta;
+        render();
+        return;
+      }
+      // Skip rebuilding the DOM while someone is mid-playback comparing takes —
+      // a redraw would recreate the <audio> elements and stop playback.
+      if(statusChanged || entriesLoaded || submissionChanged || ui.voteSubmitted){
+        render();
+      }
+      return;
+    }
+
+    if(meta.status==='sound_results'){
+      if(statusChanged || ui.roundTally.length===0) ui.roundTally = await computeRoundTally(meta.soundRoundId);
+      render();
+      return;
+    }
+
+    if(meta.status==='final'){
+      if(statusChanged || ui.finalTally.length===0) ui.finalTally = await computeFinalTally();
+      render();
+      return;
+    }
+  }
+
+  let pollTimer=null;
+  function startPolling(){
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(refreshAndRender, 1800);
+  }
+
+  (async function boot(){
+    await initPayments();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
